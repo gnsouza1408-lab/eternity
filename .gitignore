@@ -34,3 +34,6 @@ dist-ssr
 check_db_status.js
 unlock_portal.js
 unlock_portal_manual.js
+
+# Backups locais (contêm dados pessoais)
+backups/
