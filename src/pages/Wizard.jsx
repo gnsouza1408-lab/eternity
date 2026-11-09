@@ -26,6 +26,7 @@ const INITIAL_DATA = {
     email: '',
     plan: 'complete',
     draftToken: '',
+    draftSlug: '',
 };
 
 // Rascunhos salvos antes da Fase 0 usam os planos antigos.
@@ -70,13 +71,9 @@ export default function Wizard() {
         let interval;
         if (isPaymentModalOpen && data.slug) {
             interval = setInterval(async () => {
-                const { data: portal, error } = await supabase
-                    .from('portals')
-                    .select('status')
-                    .eq('slug', data.slug)
-                    .single();
+                const { data: status } = await supabase.rpc('get_portal_status', { p_slug: data.slug });
 
-                if (portal && portal.status === 'paid') {
+                if (status === 'paid') {
                     setIsPaymentModalOpen(false);
                     setCurrentStep(10); // Success Step
                     localStorage.removeItem('eternity_wizard_state'); // Clear persistence on success
@@ -134,14 +131,14 @@ export default function Wizard() {
 
     const checkSlugAvailability = async (slug) => {
         if (!slug) return false;
-        // Check if slug exists in Supabase
-        const { data: existing, error } = await supabase
-            .from('portals')
-            .select('slug')
-            .eq('slug', slug)
-            .maybeSingle(); // Use maybeSingle to avoid 406 error if not found
-
-        return !existing;
+        // Rascunho deste navegador: o servidor confere o token ao salvar
+        if (data.draftToken && data.draftSlug === slug) return true;
+        const { data: available, error } = await supabase.rpc('slug_available', { p_slug: slug });
+        if (error) {
+            console.error(error);
+            return false;
+        }
+        return available === true;
     };
 
     const handleNext = async () => {
@@ -306,7 +303,7 @@ export default function Wizard() {
                 alert(result.message || "Erro ao criar o portal. Verifique sua conexão ou tente outro link.");
                 return;
             }
-            setData(prev => ({ ...prev, draftToken: result.draftToken }));
+            setData(prev => ({ ...prev, draftToken: result.draftToken, draftSlug: result.slug }));
 
             // 2. Gera o Pix
             await generatePix();

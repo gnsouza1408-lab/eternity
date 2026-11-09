@@ -42,10 +42,8 @@ export default function Home() {
 
     React.useEffect(() => {
         const fetchCount = async () => {
-            // Get exact count from DB
-            const { count, error } = await supabase
-                .from('portals')
-                .select('*', { count: 'exact', head: true });
+            // Quantidade de portais pagos (função pública; a tabela não é lida direto)
+            const { data: count, error } = await supabase.rpc('count_paid_portals');
 
             if (!error && count !== null) {
                 // Social Proof Strategy: Base 25 + Real Count
