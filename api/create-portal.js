@@ -7,11 +7,14 @@
 import { getAdminClient } from './_lib/supabase.js';
 import { newDraftToken, hashDraftToken, draftTokenMatches } from './_lib/draft-token.js';
 import { validatePortalInput } from './_lib/portal-input.js';
+import { handleCors } from './_lib/cors.js';
 import { sendError, bodyTooLarge, jsonBody } from './_lib/http.js';
 
 const SLUG_TAKEN = 'Poxa, este link já está sendo usado! Tente outro nome.';
 
 export default async function handler(request, response) {
+    if (handleCors(request, response)) return;
+
     if (request.method !== 'POST') {
         response.setHeader('Allow', 'POST');
         return sendError(response, 405, 'method_not_allowed', 'Método não permitido.');

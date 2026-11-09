@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { getAdminClient } from './_lib/supabase.js';
 import { draftTokenMatches } from './_lib/draft-token.js';
+import { handleCors } from './_lib/cors.js';
 import { sendError, jsonBody } from './_lib/http.js';
 import { PLANS, isSellablePlan } from '../shared/plans.js';
 import { isValidSlug, isValidEmail } from '../shared/validation.js';
@@ -14,6 +15,8 @@ import { isValidSlug, isValidEmail } from '../shared/validation.js';
 const payment = new Payment(new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN }));
 
 export default async function handler(request, response) {
+    if (handleCors(request, response)) return;
+
     if (request.method !== 'POST') {
         response.setHeader('Allow', 'POST');
         return sendError(response, 405, 'method_not_allowed', 'Método não permitido.');
