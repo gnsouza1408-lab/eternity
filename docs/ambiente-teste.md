@@ -1,3 +1,5 @@
+> **NÃO ESTÁ EM USO (08/11/2026).** Decisão: a Fase 0 é testada localmente com `vercel dev` contra o Supabase de produção (portais de teste com slug `teste-cc-*`, apagados no fim) e com um Pix real de R$ 12,90. Mantido só como referência.
+
 # Ambiente de teste da Fase 0
 
 Objetivo: desenvolver e testar tudo sem tocar no Supabase nem no Mercado Pago de produção e sem gastar dinheiro real.

@@ -1,3 +1,5 @@
+-- NÃO ESTÁ EM USO (08/11/2026): não existe projeto Supabase de teste. Ver docs/ambiente-teste.md.
+-- NUNCA rodar este arquivo na produção (faz DROP TABLE).
 -- =====================================================================
 -- 00 — Projeto Supabase de TESTE: estrutura igual à produção + dados fictícios
 -- =====================================================================
