@@ -255,19 +255,19 @@ export default function Wizard() {
         }
     };
 
-    const generatePix = async () => {
+    // O valor é definido pelo servidor a partir do plano salvo; aqui só vão slug e token.
+    const generatePix = async (slug, draftToken) => {
         try {
             const response = await fetch('/api/create-pix', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    slug: data.slug,
-                    email: data.email,
-                    price: plan.price,
-                })
+                body: JSON.stringify({ slug, draftToken })
             });
-            const result = await response.json();
-            if (result.error) throw new Error(result.error);
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                alert(result.message || "Erro ao gerar Pix. Tente novamente.");
+                return;
+            }
             setPixData(result);
             setIsPaymentModalOpen(true);
         } catch (error) {
@@ -306,7 +306,7 @@ export default function Wizard() {
             setData(prev => ({ ...prev, draftToken: result.draftToken, draftSlug: result.slug }));
 
             // 2. Gera o Pix
-            await generatePix();
+            await generatePix(result.slug, result.draftToken);
         } catch (error) {
             console.error("Error saving portal:", error);
             alert("Erro ao criar o portal. Verifique sua conexão ou tente outro link.");

@@ -1,64 +1,99 @@
-
+// POST /api/create-pix
+// Gera um Pix para um portal PENDENTE, a pedido de quem tem o token de rascunho.
+// O valor vem do plano gravado no banco (shared/plans.js), nunca do navegador.
+// Body: { slug, draftToken }
+// O aviso de pagamento chega pelo webhook configurado no painel do Mercado Pago.
+import { randomUUID } from 'node:crypto';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminClient } from './_lib/supabase.js';
+import { draftTokenMatches } from './_lib/draft-token.js';
+import { sendError, jsonBody } from './_lib/http.js';
+import { PLANS, isSellablePlan } from '../shared/plans.js';
+import { isValidSlug, isValidEmail } from '../shared/validation.js';
 
-// Initialize Supabase (Service Role for secure DB access) needs process.env vars
-// But for now we might not strictly need DB access here if we just return the QR Code.
-// However, updating the DB with the "payment_id" reference is good practice.
-
-const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
-const payment = new Payment(client);
+const payment = new Payment(new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN }));
 
 export default async function handler(request, response) {
-    // Add CORS headers
-    response.setHeader('Access-Control-Allow-Credentials', true);
-    response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    response.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
-
-    if (request.method === 'OPTIONS') {
-        response.status(200).end();
-        return;
-    }
-
     if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method not allowed' });
+        response.setHeader('Allow', 'POST');
+        return sendError(response, 405, 'method_not_allowed', 'Método não permitido.');
     }
 
-    const { slug, email, descriptions, price } = request.body;
-
-    if (!slug) {
-        return response.status(400).json({ error: 'Missing slug' });
+    const body = jsonBody(request);
+    const slug = typeof body?.slug === 'string' ? body.slug.trim() : '';
+    const draftToken = body?.draftToken;
+    if (!isValidSlug(slug) || typeof draftToken !== 'string' || !draftToken) {
+        return sendError(response, 400, 'invalid_input', 'Dados inválidos.');
     }
 
+    let portal;
     try {
-        const body = {
-            transaction_amount: Number(price) || 15.90,
-            description: `Eternity Portal: ${slug}`,
-            payment_method_id: 'pix',
-            payer: {
-                email: email || 'pagador@example.com', // Fallback or user email
-            },
-            notification_url: process.env.WEBHOOK_URL, // Where MP sends the "PAID" signal
-            metadata: {
-                slug: slug
-            }
-        };
-
-        const result = await payment.create({ body });
-
-        return response.status(200).json({
-            id: result.id,
-            ticket_url: result.point_of_interaction.transaction_data.ticket_url,
-            qr_code: result.point_of_interaction.transaction_data.qr_code, // "Copia e cola"
-            qr_code_base64: result.point_of_interaction.transaction_data.qr_code_base64
-        });
-
+        const { data, error } = await getAdminClient()
+            .from('portals')
+            .select('status, plan, email, draft_token_hash')
+            .eq('slug', slug)
+            .maybeSingle();
+        if (error) throw error;
+        portal = data;
     } catch (error) {
-        console.error(error);
-        return response.status(500).json({ error: 'Error generating Pix', details: error.message });
+        console.error('create-pix db read error:', error?.message || error);
+        return sendError(response, 500, 'server_error', 'Erro ao gerar Pix. Tente novamente.');
     }
+
+    if (!portal) {
+        return sendError(response, 404, 'not_found', 'Portal não encontrado.');
+    }
+    if (portal.status !== 'pending') {
+        return sendError(response, 409, 'already_paid', 'Este portal já foi pago.');
+    }
+    if (!draftTokenMatches(draftToken, portal.draft_token_hash)) {
+        return sendError(response, 403, 'forbidden', 'Não foi possível gerar o Pix para este portal.');
+    }
+    if (!isSellablePlan(portal.plan)) {
+        return sendError(response, 409, 'invalid_plan', 'Plano indisponível. Crie o portal novamente.');
+    }
+    if (!isValidEmail(portal.email)) {
+        return sendError(response, 400, 'invalid_email', 'Informe um e-mail válido antes de gerar o Pix.');
+    }
+
+    const amount = PLANS[portal.plan].price;
+
+    let result;
+    try {
+        result = await payment.create({
+            body: {
+                transaction_amount: amount,
+                description: `Eternity Portal: ${slug}`,
+                payment_method_id: 'pix',
+                payer: { email: portal.email },
+                external_reference: slug,
+                metadata: { slug, plan: portal.plan },
+            },
+            requestOptions: { idempotencyKey: randomUUID() },
+        });
+    } catch (error) {
+        console.error('create-pix mercadopago error:', error?.message || error);
+        return sendError(response, 502, 'payment_provider_error', 'Erro ao gerar Pix. Tente novamente.');
+    }
+
+    // Registro do Pix gerado (não bloqueia a resposta se falhar: o webhook grava de novo).
+    try {
+        const { error } = await getAdminClient()
+            .from('portals')
+            .update({ payment_id: String(result.id), payment_status: result.status })
+            .eq('slug', slug)
+            .eq('status', 'pending');
+        if (error) throw error;
+    } catch (error) {
+        console.error('create-pix db update error:', error?.message || error);
+    }
+
+    const transaction = result.point_of_interaction?.transaction_data || {};
+    return response.status(200).json({
+        id: result.id,
+        amount,
+        ticket_url: transaction.ticket_url,
+        qr_code: transaction.qr_code,
+        qr_code_base64: transaction.qr_code_base64,
+    });
 }
