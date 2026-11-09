@@ -1,5 +1,38 @@
 # Diagnóstico do Eternity — 14/10/2026
 
+## Atualização 08/11/2026 — Fase 0 (segurança)
+
+> Código na branch `fase-0`, **ainda não publicado**. Ordem de publicação, testes e rollback: [`docs/fase-0-publicacao.md`](fase-0-publicacao.md).
+> Banco: SQL `01` (aditivo) já rodado na produção; SQL `02` (fecha a tabela) só depois do deploy.
+> O texto original abaixo é o retrato de 14/10 e não foi reescrito.
+
+**Decisões:** dois planos vitalícios, pagamento único: **Essencial R$ 12,90** (5 fotos, sem música, emoji padrão) e **Completo R$ 19,90** (15 fotos, música, emojis). Preço e limites só no servidor (`shared/plans.js`). O plano Anual saiu da venda; portais `annual`/`eternal` existentes continuam abrindo. Domínio oficial: `eternity.dev.br`. Testes feitos localmente contra a produção com slugs `teste-cc-*` (apagados), sem projeto de teste.
+
+| Problema (seção) | Situação após a Fase 0 |
+|---|---|
+| Anon lê a tabela inteira, com e-mails (§4) | **Resolvido após o SQL 02.** Front lê só por funções `SECURITY DEFINER`: portal sem e-mail e só se pago, slug livre, status, contagem. |
+| Anon insere qualquer coisa, inclusive `status: 'paid'` (§4) | **Resolvido após o SQL 02.** Criação só por `/api/create-portal` (chave secreta), status forçado `pending`, CHECK no banco. |
+| Preço vindo do navegador (§3.3) | **Resolvido.** `create-pix` calcula pelo plano gravado; webhook confere valor e moeda. |
+| `create-pix` aceita qualquer slug (§3.3) | **Resolvido.** Exige portal existente, `pending` e token de rascunho. |
+| Webhook sem assinatura (§3.3) | **Resolvido.** Valida `x-signature`; webhook configurado no painel do MP. *A confirmar no passo 3 da publicação.* |
+| Webhook falha em silêncio, responde 200 (A7) | **Resolvido.** Sem fallback para chave pública; erro de banco → 500, erro do MP → 502 (o MP reenvia). |
+| Sem `payment_id` no banco (§3.3) | **Resolvido.** `payment_id`, `payment_status`, `paid_amount`, `paid_at`. |
+| `service_role` hardcoded nos scripts (§4) | **Resolvido.** Chaves legadas desativadas em 14/10; scripts em `scripts/` leem `.env`. |
+| CORS `*` com credentials (§2 baixa) | **Resolvido.** Só `eternity.dev.br` e `www`. |
+| E-mail de terceiro como payer (M10) | **Resolvido.** E-mail obrigatório e validado; é o payer. |
+| Slug sem sanitização (A1) | **Resolvido.** Normalizado no wizard e validado no servidor. |
+| Slug ocupado por pendente / sem novo Pix (A3, A4, §1.3 item 6) | **Parcial.** Quem criou retoma o portal e gera novo Pix pelo token de rascunho (mesmo navegador). Pendentes antigos continuam ocupando o slug. |
+| Duplo clique em "Gerar PIX" (M1) | **Resolvido.** |
+| Plano Anual sem expiração (M9) | **Resolvido.** Anual saiu da venda. |
+| Prova social falsa "+44" (§0 item 6) | **Resolvido.** Contador e avatares removidos da Home. |
+| Prefixo `eternity.app/` (§2 baixa) | **Resolvido.** `eternity.dev.br/portal/`. |
+| Supabase pausando por inatividade | **Resolvido.** Cron diário da Vercel em `/api/keepalive`. |
+| Fotos e payload sem limite de tamanho (§4, M3) | **Mitigado.** Só JPEG base64, até 260 mil caracteres por foto, corpo até 4 MB. Storage fica para a Fase 2. |
+
+**Continua em aberto:** e-mail transacional (A6), "IA poética" fake (A5), campos obrigatórios no wizard (A2), HEIC/erros de upload (M2), modal de Pix no celular (M6), eventos de funil (M11), SEO/OG (M12), Termos e Privacidade (§4), lint (73 erros antigos), pendentes antigos sem expiração.
+
+---
+
 > Escopo: leitura completa do código, execução local (desktop e 375px), consulta ao Supabase e ao Mercado Pago (somente leitura, só agregados) e verificação de lint.
 > **Nada foi alterado no código.** Única mudança no repositório: `git init`, `.gitignore` e commit inicial (ver "Estado do Git" no fim).
 > Nenhum dado pessoal (slugs, e-mails, mensagens, fotos) está neste documento.
@@ -267,3 +300,4 @@ Hoje: Anual R$ 15,90/ano (5 fotos, sem música/emoji/IA) vs Eterno R$ 19,90 úni
 - `.gitignore` já tinha `node_modules`, `dist` e `.vercel`. **Faltavam `.env` e `.env.*`:** adicionados.
 - **Desvio do pedido:** `check_db_status.js`, `unlock_portal.js` e `unlock_portal_manual.js` foram adicionados ao `.gitignore` e **não** entraram no commit, porque contêm a `service_role` key em texto puro e ela ficaria para sempre no histórico. `check_portal.js` (só usa a chave pública) foi commitado. Os 3 arquivos continuam em disco; sugiro migrar para `process.env` e então versioná-los.
 - Verificado após o `git add`: nenhuma ocorrência de `eyJhbGci`, `APP_USR-` ou `sb_secret` nos arquivos staged.
+- **08/11/2026:** os 3 scripts foram reescritos em `scripts/` lendo `process.env` e versionados (a exceção no `.gitignore` saiu). Repositório no GitHub (`gnsouza1408-lab/eternity-app`), Vercel conectada ao Git: merge na `main` publica em produção. A Fase 0 está na branch `fase-0`, um commit por item.
