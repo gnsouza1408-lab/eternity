@@ -34,6 +34,7 @@ const FAQItem = ({ question, answer }) => {
 };
 
 import { supabase } from '../lib/supabaseClient';
+import { PLANS, formatBRL } from '../../shared/plans.js';
 
 export default function Home() {
     const [isAnnual, setIsAnnual] = useState(true);
@@ -134,13 +135,13 @@ export default function Home() {
                             onClick={() => setIsAnnual(true)}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${isAnnual ? 'bg-rose-600 text-white shadow-lg' : 'hover:text-white text-gray-400'}`}
                         >
-                            Anual
+                            Essencial
                         </button>
                         <button
                             onClick={() => setIsAnnual(false)}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${!isAnnual ? 'bg-rose-600 text-white shadow-lg' : 'hover:text-white text-gray-400'}`}
                         >
-                            Eterno
+                            Completo
                         </button>
                     </div>
                 </div>
@@ -155,10 +156,10 @@ export default function Home() {
                     </div>
 
                     <div className="mb-6">
-                        <h3 className="text-xl font-medium text-white mb-2">{isAnnual ? 'Amor Anual' : 'Amor Eterno'}</h3>
+                        <h3 className="text-xl font-medium text-white mb-2">{isAnnual ? 'Amor Essencial' : 'Amor Completo'}</h3>
                         <div className="flex items-baseline gap-1">
-                            <span className="text-4xl font-serif font-bold">{isAnnual ? 'R$ 15,90' : 'R$ 19,90'}</span>
-                            <span className="text-gray-500 text-sm">{isAnnual ? '/ano' : '/único'}</span>
+                            <span className="text-4xl font-serif font-bold">{formatBRL(isAnnual ? PLANS.essential.price : PLANS.complete.price)}</span>
+                            <span className="text-gray-500 text-sm">/único</span>
                         </div>
                     </div>
 
@@ -175,7 +176,7 @@ export default function Home() {
                         </li>
                         <li className="flex items-center gap-3 text-sm text-gray-300">
                             <InfinityIcon className="h-4 w-4 text-rose-500" />
-                            {isAnnual ? 'Até 5 fotos' : 'Até 15 fotos'}
+                            Até {isAnnual ? PLANS.essential.maxPhotos : PLANS.complete.maxPhotos} fotos
                         </li>
                         <li className="flex items-center gap-3 text-sm text-gray-300">
                             {isAnnual ? <div className="h-1.5 w-1.5 rounded-full bg-gray-600" /> : <Heart className="h-4 w-4 text-rose-500" />}
@@ -204,7 +205,7 @@ export default function Home() {
                         />
                         <FAQItem
                             question="O site expira?"
-                            answer="No plano Eterno, ele é vitalício. No plano Anual, você pode renovar ou fazer upgrade quando quiser."
+                            answer="Não. Os dois planos são vitalícios: pagamento único, sem renovação."
                         />
                     </div>
                 </Card>
