@@ -30,10 +30,6 @@ dist-ssr
 .env.*
 !.env.example
 
-# Scripts locais com service_role key hardcoded (NÃO commitar; migrar p/ process.env e rotacionar a chave)
-check_db_status.js
-unlock_portal.js
-unlock_portal_manual.js
 
 # Backups locais (contêm dados pessoais)
 backups/
