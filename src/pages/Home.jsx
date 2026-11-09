@@ -33,25 +33,10 @@ const FAQItem = ({ question, answer }) => {
     );
 };
 
-import { supabase } from '../lib/supabaseClient';
 import { PLANS, formatBRL } from '../../shared/plans.js';
 
 export default function Home() {
     const [isAnnual, setIsAnnual] = useState(true);
-    const [portalCount, setPortalCount] = useState(28); // Start with user's requested number as base/fallback
-
-    React.useEffect(() => {
-        const fetchCount = async () => {
-            // Quantidade de portais pagos (função pública; a tabela não é lida direto)
-            const { data: count, error } = await supabase.rpc('count_paid_portals');
-
-            if (!error && count !== null) {
-                // Social Proof Strategy: Base 25 + Real Count
-                setPortalCount(25 + count);
-            }
-        };
-        fetchCount();
-    }, []);
 
     return (
         <div className="min-h-screen py-20 px-4 flex flex-col items-center justify-center relative z-10">
@@ -87,19 +72,6 @@ export default function Home() {
                             Criar nosso portal
                         </Button>
                     </Link>
-
-                    <div className="flex items-center justify-center lg:justify-start gap-4 animate-fade-in-up">
-                        <div className="flex -space-x-4">
-                            {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="h-10 w-10 rounded-full border-2 border-black bg-gray-700 overflow-hidden relative z-10 first:z-40 [&:nth-child(2)]:z-30 [&:nth-child(3)]:z-20">
-                                    <img src={`https://i.pravatar.cc/100?img=${i + 15}`} alt="User" className="h-full w-full object-cover" />
-                                </div>
-                            ))}
-                        </div>
-                        <div className="text-sm font-medium">
-                            <span className="text-rose-500 font-bold text-base">+{portalCount}</span> <span className="text-gray-300">memórias eternizadas</span>
-                        </div>
-                    </div>
                 </motion.div>
 
                 {/* Right Column: Visual Preview */}

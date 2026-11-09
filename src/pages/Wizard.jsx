@@ -555,7 +555,7 @@ export default function Wizard() {
                             onChange={(e) => handleChange('email', e.target.value)}
                             placeholder="seu@email.com"
                         />
-                        <p className="text-xs text-gray-500">Enviaremos o link do seu portal para este e-mail.</p>
+                        <p className="text-xs text-gray-500">Usamos este e-mail para identificar seu pagamento e te ajudar a recuperar seu portal, se precisar.</p>
                     </div>
                 );
             case 9:
