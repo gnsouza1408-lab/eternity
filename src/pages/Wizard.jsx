@@ -11,6 +11,33 @@ import { SupportButton } from '../components/SupportButton';
 import { supabase } from '../lib/supabaseClient';
 
 import { PaymentModal } from '../components/PaymentModal';
+import { PLANS, DEFAULT_EMOJI, ALLOWED_EMOJIS, formatBRL } from '../../shared/plans.js';
+import { sanitizeSlugInput, finalizeSlug, isValidSlug, isValidEmail } from '../../shared/validation.js';
+
+const INITIAL_DATA = {
+    slug: '',
+    title: 'Nós para sempre',
+    date: '',
+    message: '',
+    photos: [],
+    emoji: DEFAULT_EMOJI,
+    music: '',
+    musicName: '',
+    email: '',
+    plan: 'complete',
+    draftToken: '',
+    draftSlug: '',
+};
+
+// Rascunhos salvos antes da Fase 0 usam os planos antigos.
+const LEGACY_PLAN_MAP = { annual: 'essential', eternal: 'complete' };
+
+function restoreData(saved) {
+    const restored = { ...INITIAL_DATA, ...saved };
+    restored.plan = LEGACY_PLAN_MAP[restored.plan] || restored.plan;
+    if (!PLANS[restored.plan]) restored.plan = INITIAL_DATA.plan;
+    return restored;
+}
 
 const STEPS = [
     { id: 'slug', title: 'Escolha seu Link' },
@@ -29,18 +56,9 @@ const STEPS = [
 export default function Wizard() {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0);
-    const [data, setData] = useState({
-        slug: '',
-        title: 'Nós para sempre',
-        date: '',
-        message: '',
-        photos: [],
-        emoji: '❤️',
-        music: '',
-        musicName: '',
-        email: '',
-        plan: 'eternal',
-    });
+    const [data, setData] = useState(INITIAL_DATA);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const plan = PLANS[data.plan] || PLANS[INITIAL_DATA.plan];
     const [isGenerating, setIsGenerating] = useState(false);
 
     // Payment State
@@ -53,13 +71,9 @@ export default function Wizard() {
         let interval;
         if (isPaymentModalOpen && data.slug) {
             interval = setInterval(async () => {
-                const { data: portal, error } = await supabase
-                    .from('portals')
-                    .select('status')
-                    .eq('slug', data.slug)
-                    .single();
+                const { data: status } = await supabase.rpc('get_portal_status', { p_slug: data.slug });
 
-                if (portal && portal.status === 'paid') {
+                if (status === 'paid') {
                     setIsPaymentModalOpen(false);
                     setCurrentStep(10); // Success Step
                     localStorage.removeItem('eternity_wizard_state'); // Clear persistence on success
@@ -70,7 +84,7 @@ export default function Wizard() {
                             window.ttq.track('CompletePayment', {
                                 content_id: data.slug,
                                 content_type: 'product',
-                                value: data.plan === 'annual' ? 15.90 : 19.90,
+                                value: plan.price,
                                 currency: 'BRL'
                             });
                         } catch (e) { console.error("Pixel Error", e); }
@@ -90,7 +104,7 @@ export default function Wizard() {
         if (savedState) {
             try {
                 const parsed = JSON.parse(savedState);
-                setData(parsed.data);
+                setData(restoreData(parsed.data));
                 setCurrentStep(parsed.currentStep);
                 if (parsed.pixData) {
                     setPixData(parsed.pixData);
@@ -117,27 +131,42 @@ export default function Wizard() {
 
     const checkSlugAvailability = async (slug) => {
         if (!slug) return false;
-        // Check if slug exists in Supabase
-        const { data: existing, error } = await supabase
-            .from('portals')
-            .select('slug')
-            .eq('slug', slug)
-            .maybeSingle(); // Use maybeSingle to avoid 406 error if not found
-
-        return !existing;
+        // Rascunho deste navegador: o servidor confere o token ao salvar
+        if (data.draftToken && data.draftSlug === slug) return true;
+        const { data: available, error } = await supabase.rpc('slug_available', { p_slug: slug });
+        if (error) {
+            console.error(error);
+            return false;
+        }
+        return available === true;
     };
 
     const handleNext = async () => {
         if (currentStep === 0) {
-            if (!data.slug) {
+            const slug = finalizeSlug(data.slug);
+            if (!slug) {
                 alert("Por favor, digite um link.");
                 return;
             }
-            const isAvailable = await checkSlugAvailability(data.slug);
+            if (!isValidSlug(slug)) {
+                alert("Use de 3 a 60 letras, números e traços.");
+                return;
+            }
+            if (slug !== data.slug) handleChange('slug', slug);
+            const isAvailable = await checkSlugAvailability(slug);
             if (!isAvailable) {
                 alert("Poxa, este link já está sendo usado! Tente outro nome.");
                 return;
             }
+        }
+
+        if (currentStep === 8) {
+            const email = data.email.trim();
+            if (!isValidEmail(email)) {
+                alert("Digite um e-mail válido.");
+                return;
+            }
+            if (email !== data.email) handleChange('email', email);
         }
 
         if (currentStep < STEPS.length - 1) {
@@ -158,7 +187,7 @@ export default function Wizard() {
     const handlePhotoUpload = async (e) => {
         const files = Array.from(e.target.files);
         // Limit based on plan
-        const maxPhotos = data.plan === 'annual' ? 5 : 15;
+        const maxPhotos = plan.maxPhotos;
         const currentCount = data.photos.length;
         const remainingSlots = maxPhotos - currentCount;
 
@@ -226,19 +255,19 @@ export default function Wizard() {
         }
     };
 
-    const generatePix = async () => {
+    // O valor é definido pelo servidor a partir do plano salvo; aqui só vão slug e token.
+    const generatePix = async (slug, draftToken) => {
         try {
             const response = await fetch('/api/create-pix', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    slug: data.slug,
-                    email: data.email,
-                    price: data.plan === 'annual' ? 15.90 : 19.90,
-                })
+                body: JSON.stringify({ slug, draftToken })
             });
-            const result = await response.json();
-            if (result.error) throw new Error(result.error);
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                alert(result.message || "Erro ao gerar Pix. Tente novamente.");
+                return;
+            }
             setPixData(result);
             setIsPaymentModalOpen(true);
         } catch (error) {
@@ -248,52 +277,47 @@ export default function Wizard() {
     };
 
     const finalizeCreation = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         try {
-            // 1. Save to Supabase first
-            const { error } = await supabase
-                .from('portals')
-                .upsert([
-                    {
-                        slug: data.slug,
-                        title: data.title,
-                        date: data.date,
-                        message: data.message,
-                        photos: data.photos,
-                        emoji: data.emoji,
-                        music: data.music,
-                        musicName: data.musicName,
-                        email: data.email,
-                        plan: data.plan,
-                        status: 'pending' // Important
-                    }
-                ], { onConflict: 'slug' });
+            // 1. Salva no servidor (valida, aplica o plano e devolve o token de rascunho)
+            const response = await fetch('/api/create-portal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    slug: data.slug,
+                    title: data.title,
+                    date: data.date,
+                    message: data.message,
+                    photos: data.photos,
+                    emoji: data.emoji,
+                    music: data.music,
+                    musicName: data.musicName,
+                    email: data.email,
+                    plan: data.plan,
+                    draftToken: data.draftToken || undefined,
+                }),
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                alert(result.message || "Erro ao criar o portal. Verifique sua conexão ou tente outro link.");
+                return;
+            }
+            setData(prev => ({ ...prev, draftToken: result.draftToken, draftSlug: result.slug }));
 
-            if (error) throw error;
-            console.log("Portal saved! Generating Pix...");
-
-            // 2. Generate Pix
-            await generatePix();
-
+            // 2. Gera o Pix
+            await generatePix(result.slug, result.draftToken);
         } catch (error) {
             console.error("Error saving portal:", error);
             alert("Erro ao criar o portal. Verifique sua conexão ou tente outro link.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleReset = () => {
         if (window.confirm("Tem certeza? Isso apagará tudo o que você preencheu até agora.")) {
-            setData({
-                slug: '',
-                title: 'Nós para sempre',
-                date: '',
-                message: '',
-                photos: [],
-                emoji: '❤️',
-                music: '',
-                musicName: '',
-                email: '',
-                plan: 'eternal',
-            });
+            setData(INITIAL_DATA);
             setCurrentStep(0);
             setIsPaymentModalOpen(false);
             setPixData(null);
@@ -310,10 +334,10 @@ export default function Wizard() {
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-gray-300">Digite o endereço do seu portal</label>
                         <div className="flex items-center">
-                            <span className="text-gray-500 mr-2">eternity.app/</span>
+                            <span className="text-gray-500 mr-2">eternity.dev.br/portal/</span>
                             <Input
                                 value={data.slug}
-                                onChange={(e) => handleChange('slug', e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                                onChange={(e) => handleChange('slug', sanitizeSlugInput(e.target.value))}
                                 placeholder="nome-do-casal"
                                 autoFocus
                             />
@@ -326,43 +350,40 @@ export default function Wizard() {
                     <div className="space-y-4">
                         <div
                             onClick={() => {
-                                handleChange('plan', 'annual');
+                                handleChange('plan', 'essential');
                                 // Reset features that might be incompatible if switching back
-                                if (data.photos.length > 5) {
-                                    setData(prev => ({ ...prev, photos: prev.photos.slice(0, 5), music: '', emoji: '❤️' }));
-                                } else {
-                                    setData(prev => ({ ...prev, music: '', emoji: '❤️' }));
-                                }
+                                const limit = PLANS.essential.maxPhotos;
+                                setData(prev => ({ ...prev, photos: prev.photos.slice(0, limit), music: '', musicName: '', emoji: DEFAULT_EMOJI }));
                             }}
                             className={cn(
                                 "p-6 rounded-xl border cursor-pointer transition-all flex justify-between items-center",
-                                data.plan === 'annual' ? "bg-rose-500/10 border-rose-500" : "bg-white/5 border-white/10"
+                                data.plan === 'essential' ? "bg-rose-500/10 border-rose-500" : "bg-white/5 border-white/10"
                             )}
                         >
                             <div>
-                                <h3 className="font-serif text-lg">Plano Anual</h3>
-                                <p className="text-sm text-gray-400">R$ 15,90 / ano</p>
+                                <h3 className="font-serif text-lg">Plano Essencial</h3>
+                                <p className="text-sm text-gray-400">{formatBRL(PLANS.essential.price)} (Único)</p>
                                 <p className="text-xs text-rose-300/70 mt-1">Limite de 5 fotos • Sem trilha sonora</p>
                             </div>
-                            {data.plan === 'annual' && <div className="h-4 w-4 rounded-full bg-rose-500" />}
+                            {data.plan === 'essential' && <div className="h-4 w-4 rounded-full bg-rose-500" />}
                         </div>
 
                         <div
-                            onClick={() => handleChange('plan', 'eternal')}
+                            onClick={() => handleChange('plan', 'complete')}
                             className={cn(
                                 "p-6 rounded-xl border cursor-pointer transition-all flex justify-between items-center relative overflow-hidden",
-                                data.plan === 'eternal' ? "bg-rose-500/10 border-rose-500" : "bg-white/5 border-white/10"
+                                data.plan === 'complete' ? "bg-rose-500/10 border-rose-500" : "bg-white/5 border-white/10"
                             )}
                         >
                             <div className="absolute top-0 right-0 p-2">
                                 <span className="bg-rose-500 text-[10px] px-2 py-0.5 rounded-full text-white font-bold">RECOMENDADO</span>
                             </div>
                             <div>
-                                <h3 className="font-serif text-lg">Plano Eterno</h3>
-                                <p className="text-sm text-gray-400">R$ 19,90 (Único)</p>
+                                <h3 className="font-serif text-lg">Plano Completo</h3>
+                                <p className="text-sm text-gray-400">{formatBRL(PLANS.complete.price)} (Único)</p>
                                 <p className="text-xs text-rose-300/70 mt-1">15 fotos • Música • IA • Emojis</p>
                             </div>
-                            {data.plan === 'eternal' && <div className="h-4 w-4 rounded-full bg-rose-500" />}
+                            {data.plan === 'complete' && <div className="h-4 w-4 rounded-full bg-rose-500" />}
                         </div>
                     </div>
                 );
@@ -399,7 +420,7 @@ export default function Wizard() {
                             onChange={(e) => handleChange('message', e.target.value)}
                             placeholder="Escreva sua mensagem de amor..."
                         />
-                        {data.plan === 'eternal' ? (
+                        {plan.music ? (
                             <Button
                                 variant="secondary"
                                 size="sm"
@@ -413,13 +434,13 @@ export default function Wizard() {
                         ) : (
                             <div className="flex items-center gap-2 text-xs text-gray-500 bg-white/5 p-2 rounded">
                                 <Lock className="h-3 w-3" />
-                                Recurso de IA disponível apenas no Plano Eterno
+                                Recurso de IA disponível apenas no Plano Completo
                             </div>
                         )}
                     </div>
                 );
             case 5:
-                const maxPhotos = data.plan === 'annual' ? 5 : 15;
+                const maxPhotos = plan.maxPhotos;
                 return (
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-gray-300">Nossas Fotos (Max {maxPhotos})</label>
@@ -450,17 +471,17 @@ export default function Wizard() {
                                 </div>
                             ))}
                         </div>
-                        {data.plan === 'annual' && (
-                            <p className="text-xs text-center text-gray-500">Faça upgrade para o Plano Eterno para adicionar até 15 fotos.</p>
+                        {data.plan === 'essential' && (
+                            <p className="text-xs text-center text-gray-500">Faça upgrade para o Plano Completo para adicionar até {PLANS.complete.maxPhotos} fotos.</p>
                         )}
                     </div>
                 );
             case 6:
-                const emojis = ['❤️', '💖', '🌹', '✨', '💕', '💍', '🦋', 'all'];
+                const emojis = ALLOWED_EMOJIS;
                 return (
                     <div className="space-y-6">
                         <label className="block text-sm font-medium text-gray-300">Escolha o Emoji Principal</label>
-                        {data.plan === 'eternal' ? (
+                        {plan.customEmoji ? (
                             <div className="grid grid-cols-4 gap-4">
                                 {emojis.map(emoji => (
                                     <button
@@ -483,7 +504,7 @@ export default function Wizard() {
                                 <p className="text-sm text-gray-400 mb-2">Emoji Padrão selecionado</p>
                                 <div className="flex items-center justify-center gap-2 text-xs text-rose-400">
                                     <Lock className="h-3 w-3" />
-                                    Personalização disponível no Plano Eterno
+                                    Personalização disponível no Plano Completo
                                 </div>
                             </div>
                         )}
@@ -493,7 +514,7 @@ export default function Wizard() {
                 return (
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-gray-300">Música de Fundo (Link YouTube)</label>
-                        {data.plan === 'eternal' ? (
+                        {plan.music ? (
                             <>
                                 <div className="relative">
                                     <Music className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
@@ -518,7 +539,7 @@ export default function Wizard() {
                                 <p className="text-sm text-gray-400 mb-2">Trilha sonora não disponível</p>
                                 <div className="flex items-center justify-center gap-2 text-xs text-rose-400">
                                     <Lock className="h-3 w-3" />
-                                    Disponível exclusivamente no Plano Eterno
+                                    Disponível exclusivamente no Plano Completo
                                 </div>
                             </div>
                         )}
@@ -534,6 +555,7 @@ export default function Wizard() {
                             onChange={(e) => handleChange('email', e.target.value)}
                             placeholder="seu@email.com"
                         />
+                        <p className="text-xs text-gray-500">Usamos este e-mail para identificar seu pagamento e te ajudar a recuperar seu portal, se precisar.</p>
                     </div>
                 );
             case 9:
@@ -544,7 +566,7 @@ export default function Wizard() {
                         <div className="bg-white/5 p-4 rounded-lg text-left space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Plano</span>
-                                <span className="font-medium text-white">{data.plan === 'annual' ? 'Anual' : 'Eterno (Vitalício)'}</span>
+                                <span className="font-medium text-white">{plan.label} (Vitalício)</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Fotos</span>
@@ -561,7 +583,7 @@ export default function Wizard() {
                         <div className="bg-white/5 p-4 rounded-lg border border-white/10">
                             <p className="text-sm text-gray-400 mb-2">Total a pagar</p>
                             <p className="text-3xl font-serif text-rose-400 font-bold">
-                                {data.plan === 'annual' ? 'R$ 15,90' : 'R$ 19,90'}
+                                {formatBRL(plan.price)}
                             </p>
                         </div>
 
@@ -569,6 +591,7 @@ export default function Wizard() {
                             variant="primary"
                             className="w-full gap-2 text-lg"
                             onClick={finalizeCreation}
+                            disabled={isSubmitting}
                         >
                             <QrCode className="h-5 w-5" />
                             Gerar PIX e Finalizar

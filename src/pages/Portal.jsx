@@ -41,19 +41,18 @@ export default function Portal() {
         const loadPortal = async () => {
             try {
                 setLoading(true);
-                const { data: portalData, error } = await supabase
-                    .from('portals')
-                    .select('slug, title, message, date, photos, music, musicName, plan, emoji, status') // Security: Only fetch public fields
-                    .eq('slug', slug)
-                    .single();
-
+                // Função pública: devolve só campos públicos (sem e-mail) e só se pago
+                const { data: rows, error } = await supabase.rpc('get_public_portal', { p_slug: slug });
                 if (error) {
                     console.error("Error fetching portal:", error);
-                    // Don't return, let loading finish so we show error screen if no data
                 }
 
-                if (portalData) {
-                    setData(portalData);
+                if (rows && rows.length) {
+                    setData({ ...rows[0], status: 'paid' });
+                } else if (!error) {
+                    // Não pago ou inexistente: só o status, para mostrar "Aguardando Pagamento"
+                    const { data: status } = await supabase.rpc('get_portal_status', { p_slug: slug });
+                    if (status) setData({ status });
                 }
             } catch (e) {
                 console.error(e);
