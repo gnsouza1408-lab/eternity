@@ -3,6 +3,7 @@ import { Wand2, Loader2, RotateCcw, PenLine, Check, AlertCircle, X } from 'lucid
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { cn } from '../lib/utils';
+import { modelosMensagem } from '../lib/modelosMensagem';
 
 // Limites iguais aos do servidor (api/_lib/declaracao.js). O servidor revalida.
 const LIMITES = { nome: 40, comoSeConheceram: 300, memoria: 400, admiracao: 300 };
@@ -68,6 +69,7 @@ const textareaClasse = 'w-full bg-black/20 border border-white/10 rounded-md p-2
  * Assistente do passo da mensagem.
  * - A sugestão nunca entra no texto sem a pessoa clicar em "Usar este texto".
  * - Se já houver texto, pede confirmação antes de substituir; depois, permite desfazer.
+ * - Se a API falhar, mostra 3 modelos editáveis.
  */
 export function AssistenteMensagem({ mensagem, onMensagemChange, rascunhoId }) {
     const [aberto, setAberto] = useState(() => !mensagem?.trim());
@@ -265,12 +267,15 @@ export function AssistenteMensagem({ mensagem, onMensagemChange, rascunhoId }) {
                         )}
 
                         {estado === 'erro' && (
-                            <div role="alert" className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
-                                <p className="flex gap-2"><AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {erro}</p>
-                                <Button type="button" variant="ghost" className="w-full min-h-[44px]" onClick={() => gerar()}>
-                                    <RotateCcw className="mr-2 h-4 w-4" /> Tentar de novo
-                                </Button>
-                            </div>
+                            <ModelosProntos
+                                erro={erro}
+                                paraQuem={form.paraQuem}
+                                confirmar={confirmar}
+                                onUsar={aplicar}
+                                onConfirmar={efetivar}
+                                onCancelar={() => setConfirmar(null)}
+                                onTentarDeNovo={() => gerar()}
+                            />
                         )}
                     </div>
                 </section>
@@ -287,6 +292,33 @@ function ConfirmarSubstituicao({ onSim, onNao }) {
                 <Button type="button" className="flex-1 min-h-[44px]" onClick={onSim}>Substituir</Button>
                 <Button type="button" variant="secondary" className="flex-1 min-h-[44px]" onClick={onNao}>Manter o meu</Button>
             </div>
+        </div>
+    );
+}
+
+function ModelosProntos({ erro, paraQuem, confirmar, onUsar, onConfirmar, onCancelar, onTentarDeNovo }) {
+    const modelos = modelosMensagem(paraQuem);
+    return (
+        <div className="space-y-3">
+            <div role="alert" className="flex items-start justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                <span className="flex gap-2"><AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /> {erro} Enquanto isso, comece por um destes modelos e edite do seu jeito:</span>
+            </div>
+            {modelos.map((m) => (
+                <div key={m.id} className="rounded-lg border border-white/10 bg-black/30 p-3 space-y-2">
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">{m.titulo}</p>
+                    <p className="text-sm text-gray-200 leading-relaxed">{m.texto}</p>
+                    {confirmar === m.texto ? (
+                        <ConfirmarSubstituicao onSim={() => onConfirmar(m.texto)} onNao={onCancelar} />
+                    ) : (
+                        <Button type="button" variant="secondary" className="w-full min-h-[44px]" onClick={() => onUsar(m.texto)}>
+                            Usar este modelo
+                        </Button>
+                    )}
+                </div>
+            ))}
+            <Button type="button" variant="ghost" className="w-full min-h-[44px]" onClick={onTentarDeNovo}>
+                <RotateCcw className="mr-2 h-4 w-4" /> Tentar a IA de novo
+            </Button>
         </div>
     );
 }
