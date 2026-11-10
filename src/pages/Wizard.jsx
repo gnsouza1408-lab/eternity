@@ -11,6 +11,7 @@ import { SupportButton } from '../components/SupportButton';
 import { supabase } from '../lib/supabaseClient';
 
 import { PaymentModal } from '../components/PaymentModal';
+import { AssistenteMensagem } from '../components/AssistenteMensagem';
 import { PLANS, DEFAULT_EMOJI, ALLOWED_EMOJIS, formatBRL } from '../../shared/plans.js';
 import { sanitizeSlugInput, finalizeSlug, isValidSlug, isValidEmail } from '../../shared/validation.js';
 
@@ -27,13 +28,21 @@ const INITIAL_DATA = {
     plan: 'complete',
     draftToken: '',
     draftSlug: '',
+    rascunhoId: '',
 };
+
+// Identificador do rascunho neste navegador (limite de gerações da IA por rascunho).
+function novoRascunho() {
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+    return { ...INITIAL_DATA, rascunhoId: id };
+}
 
 // Rascunhos salvos antes da Fase 0 usam os planos antigos.
 const LEGACY_PLAN_MAP = { annual: 'essential', eternal: 'complete' };
 
 function restoreData(saved) {
-    const restored = { ...INITIAL_DATA, ...saved };
+    const restored = { ...novoRascunho(), ...saved };
+    if (!restored.rascunhoId) restored.rascunhoId = novoRascunho().rascunhoId;
     restored.plan = LEGACY_PLAN_MAP[restored.plan] || restored.plan;
     if (!PLANS[restored.plan]) restored.plan = INITIAL_DATA.plan;
     return restored;
@@ -56,7 +65,7 @@ const STEPS = [
 export default function Wizard() {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0);
-    const [data, setData] = useState(INITIAL_DATA);
+    const [data, setData] = useState(novoRascunho);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const plan = PLANS[data.plan] || PLANS[INITIAL_DATA.plan];
 
@@ -297,7 +306,7 @@ export default function Wizard() {
 
     const handleReset = () => {
         if (window.confirm("Tem certeza? Isso apagará tudo o que você preencheu até agora.")) {
-            setData(INITIAL_DATA);
+            setData(novoRascunho());
             setCurrentStep(0);
             setIsPaymentModalOpen(false);
             setPixData(null);
@@ -399,6 +408,11 @@ export default function Wizard() {
                             value={data.message}
                             onChange={(e) => handleChange('message', e.target.value)}
                             placeholder="Escreva sua mensagem de amor..."
+                        />
+                        <AssistenteMensagem
+                            mensagem={data.message}
+                            onMensagemChange={(texto) => handleChange('message', texto)}
+                            rascunhoId={data.rascunhoId}
                         />
                     </div>
                 );
