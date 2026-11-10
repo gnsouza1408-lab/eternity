@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Upload, Sparkles, Wand2, Music, CheckCircle, Copy, Lock, QrCode } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, Music, CheckCircle, Copy, Lock, QrCode } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -59,7 +59,6 @@ export default function Wizard() {
     const [data, setData] = useState(INITIAL_DATA);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const plan = PLANS[data.plan] || PLANS[INITIAL_DATA.plan];
-    const [isGenerating, setIsGenerating] = useState(false);
 
     // Payment State
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -236,25 +235,6 @@ export default function Wizard() {
         setData(prev => ({ ...prev, photos: [...prev.photos, ...base64Images] }));
     };
 
-    const generatePoeticMessage = async () => {
-        if (!data.message) return;
-        setIsGenerating(true);
-        try {
-            // Mock AI
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            const poeticVersions = [
-                "Entre o brilho das estrelas e o sussurro do vento, nosso amor floresce como a mais bela poesia, escrita nas páginas da eternidade.",
-                "Cada batida do meu coração ecoa seu nome, numa melodia infinita que transcende o tempo e o espaço, unindo nossas almas para sempre.",
-                "Você é o verso que faltava na minha história, a rima perfeita para os meus dias, transformando o comum em extraordinário apenas por existir."
-            ];
-            setData(prev => ({ ...prev, message: poeticVersions[Math.floor(Math.random() * poeticVersions.length)] }));
-        } catch (error) {
-            console.error("AI Error", error);
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
     // O valor é definido pelo servidor a partir do plano salvo; aqui só vão slug e token.
     const generatePix = async (slug, draftToken) => {
         try {
@@ -381,7 +361,7 @@ export default function Wizard() {
                             <div>
                                 <h3 className="font-serif text-lg">Plano Completo</h3>
                                 <p className="text-sm text-gray-400">{formatBRL(PLANS.complete.price)} (Único)</p>
-                                <p className="text-xs text-rose-300/70 mt-1">15 fotos • Música • IA • Emojis</p>
+                                <p className="text-xs text-rose-300/70 mt-1">15 fotos • Música • Emojis</p>
                             </div>
                             {data.plan === 'complete' && <div className="h-4 w-4 rounded-full bg-rose-500" />}
                         </div>
@@ -420,23 +400,6 @@ export default function Wizard() {
                             onChange={(e) => handleChange('message', e.target.value)}
                             placeholder="Escreva sua mensagem de amor..."
                         />
-                        {plan.music ? (
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={generatePoeticMessage}
-                                disabled={isGenerating || !data.message}
-                                className="w-full"
-                            >
-                                {isGenerating ? <Sparkles className="animate-spin mr-2 h-4 w-4" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                                {isGenerating ? "Reescrevendo..." : "Deixar Poético com IA"}
-                            </Button>
-                        ) : (
-                            <div className="flex items-center gap-2 text-xs text-gray-500 bg-white/5 p-2 rounded">
-                                <Lock className="h-3 w-3" />
-                                Recurso de IA disponível apenas no Plano Completo
-                            </div>
-                        )}
                     </div>
                 );
             case 5:
