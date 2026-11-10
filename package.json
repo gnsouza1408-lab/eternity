@@ -11,7 +11,8 @@
     "db:status": "node --env-file=.env scripts/check-db-status.js",
     "portal:check": "node --env-file=.env scripts/check-portal.js",
     "portal:unlock": "node --env-file=.env scripts/unlock-portal.js",
-    "test:cleanup": "node --env-file=.env scripts/cleanup-test-portals.js"
+    "test:cleanup": "node --env-file=.env scripts/cleanup-test-portals.js",
+    "ia:avaliar": "node --env-file=.env scripts/avaliar-prompt.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.7.0",
