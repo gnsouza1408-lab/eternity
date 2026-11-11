@@ -141,10 +141,6 @@ export default function Home() {
                             <span className={isAnnual ? "text-gray-500" : "text-white"}>Trilha Sonora Exclusiva</span>
                         </li>
                         <li className="flex items-center gap-3 text-sm text-gray-300">
-                            {isAnnual ? <div className="h-1.5 w-1.5 rounded-full bg-gray-600" /> : <Sparkles className="h-4 w-4 text-rose-500" />}
-                            <span className={isAnnual ? "text-gray-500" : "text-white"}>Inteligência Artificial Poética</span>
-                        </li>
-                        <li className="flex items-center gap-3 text-sm text-gray-300">
                             <InfinityIcon className="h-4 w-4 text-rose-500" />
                             Até {isAnnual ? PLANS.essential.maxPhotos : PLANS.complete.maxPhotos} fotos
                         </li>

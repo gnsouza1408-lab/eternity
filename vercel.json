@@ -10,5 +10,11 @@
             "path": "/api/keepalive",
             "schedule": "0 12 * * *"
         }
-    ]
+    ],
+    "functions": {
+        "api/gerar-mensagem.js": {
+            "maxDuration": 45,
+            "includeFiles": "api/prompts/**"
+        }
+    }
 }
