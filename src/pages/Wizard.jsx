@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Upload, Music, CheckCircle, Copy, Lock, QrCode, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, Music, CheckCircle, Check, Copy, Lock, QrCode, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -13,7 +13,7 @@ import { supabase } from '../lib/supabaseClient';
 import { PaymentModal } from '../components/PaymentModal';
 import { AssistenteMensagem } from '../components/AssistenteMensagem';
 import { PLANS, DEFAULT_EMOJI, ALLOWED_EMOJIS, formatBRL } from '../../shared/plans.js';
-import { sanitizeSlugInput, finalizeSlug, isValidSlug, isValidEmail } from '../../shared/validation.js';
+import { sanitizeSlugInput, finalizeSlug, erroSlug, erroData, erroMensagem, erroEmail, hojeISO, MESSAGE_MIN } from '../../shared/validation.js';
 
 const INITIAL_DATA = {
     slug: '',
@@ -62,11 +62,24 @@ const STEPS = [
     { id: 'success', title: 'Portal Criado!' },
 ];
 
+// Mensagem de erro embaixo do campo (lida por leitores de tela).
+function CampoErro({ id, children }) {
+    if (!children) return null;
+    return <p id={id} role="alert" className="text-sm text-red-300">{children}</p>;
+}
+const campoInvalido = 'border-red-400/70 focus:border-red-400 focus:ring-red-400/50';
+
 export default function Wizard() {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState(novoRascunho);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const submitLock = useRef(false); // trava imediata contra toque duplo (o estado só muda no próximo render)
+    const [errors, setErrors] = useState({});
+    const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+    const [confirmReset, setConfirmReset] = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
+    const [successError, setSuccessError] = useState('');
     const plan = PLANS[data.plan] || PLANS[INITIAL_DATA.plan];
 
     // Payment State
@@ -151,40 +164,51 @@ export default function Wizard() {
         return available === true;
     };
 
+    // Erros de um passo (vazio = ok). A disponibilidade do link é checada à parte, no servidor.
+    const stepErrors = (step, d = data) => {
+        if (step === 0) return { slug: erroSlug(finalizeSlug(d.slug)) };
+        if (step === 3) return { date: erroData(d.date) };
+        if (step === 4) return { message: erroMensagem(d.message) };
+        if (step === 8) return { email: erroEmail((d.email || '').trim()) };
+        return {};
+    };
+    const hasErrors = (e) => Object.values(e).some(Boolean);
+
     const handleNext = async () => {
+        const found = stepErrors(currentStep);
+        if (hasErrors(found)) {
+            setErrors(found);
+            return;
+        }
+
         if (currentStep === 0) {
             const slug = finalizeSlug(data.slug);
-            if (!slug) {
-                alert("Por favor, digite um link.");
-                return;
-            }
-            if (!isValidSlug(slug)) {
-                alert("Use de 3 a 60 letras, números e traços.");
-                return;
-            }
             if (slug !== data.slug) handleChange('slug', slug);
-            const isAvailable = await checkSlugAvailability(slug);
-            if (!isAvailable) {
-                alert("Poxa, este link já está sendo usado! Tente outro nome.");
-                return;
+            setIsCheckingSlug(true);
+            try {
+                const isAvailable = await checkSlugAvailability(slug);
+                if (!isAvailable) {
+                    setErrors({ slug: "Poxa, este link já está sendo usado ou não pôde ser conferido agora. Tente outro nome." });
+                    return;
+                }
+            } finally {
+                setIsCheckingSlug(false);
             }
         }
 
         if (currentStep === 8) {
             const email = data.email.trim();
-            if (!isValidEmail(email)) {
-                alert("Digite um e-mail válido.");
-                return;
-            }
             if (email !== data.email) handleChange('email', email);
         }
 
+        setErrors({});
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(prev => prev + 1);
         }
     };
 
     const handleBack = () => {
+        setErrors({});
         if (currentStep > 0) {
             setCurrentStep(prev => prev - 1);
         }
@@ -192,6 +216,7 @@ export default function Wizard() {
 
     const handleChange = (field, value) => {
         setData(prev => ({ ...prev, [field]: value }));
+        setErrors(prev => (prev[field] ? { ...prev, [field]: '' } : prev));
     };
 
     const handlePhotoUpload = async (e) => {
@@ -275,7 +300,17 @@ export default function Wizard() {
     };
 
     const finalizeCreation = async () => {
-        if (isSubmitting) return;
+        if (isSubmitting || submitLock.current) return;
+        // Rascunhos antigos (do navegador) podem ter campos que hoje seriam recusados.
+        for (const step of [0, 3, 4, 8]) {
+            const found = stepErrors(step);
+            if (hasErrors(found)) {
+                setErrors(found);
+                setCurrentStep(step);
+                return;
+            }
+        }
+        submitLock.current = true;
         setIsSubmitting(true);
         setSubmitError('');
         setPixError('');
@@ -311,18 +346,21 @@ export default function Wizard() {
             console.error("Error saving portal:", error);
             setSubmitError("Não conseguimos salvar o portal. Verifique sua conexão e tente de novo.");
         } finally {
+            submitLock.current = false;
             setIsSubmitting(false);
         }
     };
 
     const handleReset = () => {
-        if (window.confirm("Tem certeza? Isso apagará tudo o que você preencheu até agora.")) {
-            setData(novoRascunho());
-            setCurrentStep(0);
-            setIsPaymentModalOpen(false);
-            setPixData(null);
-            localStorage.removeItem('eternity_wizard_state');
-        }
+        setData(novoRascunho());
+        setCurrentStep(0);
+        setIsPaymentModalOpen(false);
+        setPixData(null);
+        setErrors({});
+        setSubmitError('');
+        setPixError('');
+        setConfirmReset(false);
+        localStorage.removeItem('eternity_wizard_state');
     };
 
     // Step Renders
@@ -340,9 +378,16 @@ export default function Wizard() {
                                 onChange={(e) => handleChange('slug', sanitizeSlugInput(e.target.value))}
                                 placeholder="nome-do-casal"
                                 autoFocus
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                aria-invalid={Boolean(errors.slug)}
+                                aria-describedby={errors.slug ? 'erro-slug' : undefined}
+                                className={errors.slug ? campoInvalido : ''}
                             />
                         </div>
-                        <p className="text-xs text-gray-500">Use apenas letras e traços.</p>
+                        <CampoErro id="erro-slug">{errors.slug}</CampoErro>
+                        <p className="text-xs text-gray-500">Só letras minúsculas, números e traços. Ex.: ana-e-joao</p>
                     </div>
                 );
             case 1:
@@ -405,8 +450,14 @@ export default function Wizard() {
                         <Input
                             type="date"
                             value={data.date}
+                            min="1900-01-01"
+                            max={hojeISO()}
                             onChange={(e) => handleChange('date', e.target.value)}
+                            aria-invalid={Boolean(errors.date)}
+                            aria-describedby={errors.date ? 'erro-data' : undefined}
+                            className={errors.date ? campoInvalido : ''}
                         />
+                        <CampoErro id="erro-data">{errors.date}</CampoErro>
                     </div>
                 );
             case 4:
@@ -414,12 +465,21 @@ export default function Wizard() {
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-gray-300">Sua Declaração</label>
                         <textarea
-                            className="w-full h-40 bg-black/20 border border-white/10 rounded-md p-3 text-white focus:outline-none focus:border-rose-500/50 resize-none relative z-10"
+                            className={`w-full h-40 bg-black/20 border rounded-md p-3 text-white focus:outline-none resize-none relative z-10 ${errors.message ? 'border-red-400/70 focus:border-red-400' : 'border-white/10 focus:border-rose-500/50'}`}
                             autoFocus
                             value={data.message}
                             onChange={(e) => handleChange('message', e.target.value)}
                             placeholder="Escreva sua mensagem de amor..."
+                            aria-invalid={Boolean(errors.message)}
+                            aria-describedby={errors.message ? 'erro-mensagem' : 'ajuda-mensagem'}
                         />
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                                <CampoErro id="erro-mensagem">{errors.message}</CampoErro>
+                                {!errors.message && <p id="ajuda-mensagem" className="text-xs text-gray-500">Mínimo de {MESSAGE_MIN} caracteres.</p>}
+                            </div>
+                            <span className="text-xs text-gray-500 tabular-nums">{data.message.trim().length}</span>
+                        </div>
                         <AssistenteMensagem
                             mensagem={data.message}
                             onMensagemChange={(texto) => handleChange('message', texto)}
@@ -539,10 +599,16 @@ export default function Wizard() {
                         <label className="block text-sm font-medium text-gray-300">E-mail para Administração</label>
                         <Input
                             type="email"
+                            inputMode="email"
+                            autoComplete="email"
                             value={data.email}
                             onChange={(e) => handleChange('email', e.target.value)}
                             placeholder="seu@email.com"
+                            aria-invalid={Boolean(errors.email)}
+                            aria-describedby={errors.email ? 'erro-email' : undefined}
+                            className={errors.email ? campoInvalido : ''}
                         />
+                        <CampoErro id="erro-email">{errors.email}</CampoErro>
                         <p className="text-xs text-gray-500">Usamos este e-mail para identificar seu pagamento e te ajudar a recuperar seu portal, se precisar.</p>
                     </div>
                 );
@@ -615,12 +681,28 @@ export default function Wizard() {
                             <p className="text-sm text-gray-400 text-left">Copie seu link exclusivo:</p>
                             <div className="flex items-center gap-2 bg-black/40 p-3 rounded-lg border border-white/10">
                                 <span className="text-rose-300 font-mono text-sm truncate flex-1 text-left">{portalUrl}</span>
-                                <Button size="icon" variant="ghost" className="hover:bg-white/10 text-gray-400 hover:text-white" onClick={() => {
-                                    navigator.clipboard.writeText(portalUrl);
-                                    alert("Link copiado!");
-                                }}>
-                                    <Copy className="h-4 w-4" />
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    aria-label="Copiar link do portal"
+                                    className="hover:bg-white/10 text-gray-400 hover:text-white"
+                                    onClick={async () => {
+                                        try {
+                                            await navigator.clipboard.writeText(portalUrl);
+                                            setSuccessError('');
+                                            setLinkCopied(true);
+                                            setTimeout(() => setLinkCopied(false), 2500);
+                                        } catch {
+                                            setSuccessError('Não deu para copiar sozinho. Toque no link, selecione e copie.');
+                                        }
+                                    }}
+                                >
+                                    {linkCopied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
                                 </Button>
+                            </div>
+                            <div aria-live="polite" className="min-h-[1rem] text-left">
+                                {linkCopied && <p className="text-sm text-green-300">Link copiado!</p>}
+                                {successError && <p role="alert" className="text-sm text-red-300">{successError}</p>}
                             </div>
 
                             <Button
@@ -642,9 +724,10 @@ export default function Wizard() {
                                         document.body.appendChild(link);
                                         link.click();
                                         document.body.removeChild(link);
+                                        setSuccessError('');
                                     } catch (err) {
                                         console.error(err);
-                                        alert("Erro ao gerar QR Code");
+                                        setSuccessError('Não conseguimos gerar o QR Code agora. Tente de novo.');
                                     }
                                 }}
                             >
@@ -708,8 +791,9 @@ export default function Wizard() {
                         )}
                         {currentStep > 0 && currentStep < 10 && (
                             <button
-                                onClick={handleReset}
-                                className="text-xs text-rose-500/50 hover:text-rose-400 underline decoration-rose-500/30 underline-offset-4 transition-colors ml-2"
+                                type="button"
+                                onClick={() => setConfirmReset(true)}
+                                className="min-h-[44px] px-2 text-xs text-rose-500/70 hover:text-rose-400 underline decoration-rose-500/30 underline-offset-4 transition-colors ml-2"
                             >
                                 Começar Novamente
                             </button>
@@ -717,11 +801,22 @@ export default function Wizard() {
                     </div>
 
                     {currentStep < 9 ? (
-                        <Button className="ml-auto" onClick={handleNext}>
-                            Próximo <ArrowRight className="ml-2 h-4 w-4" />
+                        <Button className="ml-auto min-h-[44px]" onClick={handleNext} disabled={isCheckingSlug}>
+                            {isCheckingSlug
+                                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verificando...</>
+                                : <>Próximo <ArrowRight className="ml-2 h-4 w-4" /></>}
                         </Button>
                     ) : null}
                 </div>
+                {confirmReset && (
+                    <div role="alertdialog" aria-label="Começar novamente" className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 space-y-2">
+                        <p className="text-sm text-amber-100">Isso apaga tudo o que você preencheu até agora. Deseja recomeçar?</p>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <Button type="button" className="flex-1 min-h-[44px]" onClick={handleReset}>Apagar e recomeçar</Button>
+                            <Button type="button" variant="secondary" className="flex-1 min-h-[44px]" onClick={() => setConfirmReset(false)}>Cancelar</Button>
+                        </div>
+                    </div>
+                )}
             </Card>
 
             {currentStep < 10 && <SupportButton />}
