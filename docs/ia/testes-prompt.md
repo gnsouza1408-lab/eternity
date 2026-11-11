@@ -291,3 +291,7 @@ Tokens: 179 entrada + 0 gravados no cache + 2130 lidos do cache / 166 saída · 
 
 Tokens: 285 entrada + 0 gravados no cache + 2130 lidos do cache / 140 saída · 1391 ms · US$ 0.000120
 
+
+## Tentativa posterior: campo de gênero (revertida)
+
+Depois da rodada final, testou-se um campo opcional "Quem está escrevendo" (ele / ela / neutro, padrão neutro), com regra de concordância no prompt e 2 casos novos. Os 2 casos com gênero informado passaram. Nas duas rodadas completas seguintes, o caso `injection` (neutro, estável até então) falhou: uma vez saiu com "obrigado" e a correção não rodou (a segunda chamada falhou em silêncio, o que levou ao registro de erro no código); outra vez foi recusado. A mudança foi revertida para preservar o comportamento testado. Detalhes e próximo passo em [decisoes.md](decisoes.md#campo-quem-está-escrevendo-ele--ela--neutro).
