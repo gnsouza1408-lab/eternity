@@ -163,8 +163,9 @@ export async function gerarDeclaracao(pedido, opcoes = {}) {
             corrigido: true,
             restante: palavrasDeGenero(segunda.mensagem),
         };
-    } catch {
-        // A correção é um refinamento: se falhar, a primeira versão ainda serve.
+    } catch (erro) {
+        // A correção é um refinamento: se falhar, a primeira versão ainda serve. Mas o erro é registrado.
+        console.warn('declaracao: correção de gênero falhou', erro?.message || erro);
         return { ...primeira, corrigido: false };
     }
 }
