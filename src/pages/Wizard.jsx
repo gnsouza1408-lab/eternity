@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Upload, Music, CheckCircle, Copy, Lock, QrCode } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Upload, Music, CheckCircle, Copy, Lock, QrCode, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -72,7 +72,9 @@ export default function Wizard() {
     // Payment State
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [pixData, setPixData] = useState(null);
-    const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+    const [isGeneratingPix, setIsGeneratingPix] = useState(false);
+    const [pixError, setPixError] = useState('');
+    const [submitError, setSubmitError] = useState('');
 
     // Polling for Payment Approval
     useEffect(() => {
@@ -245,7 +247,10 @@ export default function Wizard() {
     };
 
     // O valor é definido pelo servidor a partir do plano salvo; aqui só vão slug e token.
+    // Retorna true se o Pix foi gerado. Erros ficam em pixError (mostrado na tela, sem alert).
     const generatePix = async (slug, draftToken) => {
+        setIsGeneratingPix(true);
+        setPixError('');
         try {
             const response = await fetch('/api/create-pix', {
                 method: 'POST',
@@ -254,20 +259,26 @@ export default function Wizard() {
             });
             const result = await response.json().catch(() => ({}));
             if (!response.ok) {
-                alert(result.message || "Erro ao gerar Pix. Tente novamente.");
-                return;
+                setPixError(result.message || "Não conseguimos gerar o Pix agora. Tente de novo.");
+                return false;
             }
-            setPixData(result);
+            setPixData({ ...result, generatedAt: Date.now() });
             setIsPaymentModalOpen(true);
+            return true;
         } catch (error) {
             console.error(error);
-            alert("Erro ao gerar Pix. Tente novamente.");
+            setPixError("Não conseguimos gerar o Pix agora. Verifique sua conexão e tente de novo.");
+            return false;
+        } finally {
+            setIsGeneratingPix(false);
         }
     };
 
     const finalizeCreation = async () => {
         if (isSubmitting) return;
         setIsSubmitting(true);
+        setSubmitError('');
+        setPixError('');
         try {
             // 1. Salva no servidor (valida, aplica o plano e devolve o token de rascunho)
             const response = await fetch('/api/create-portal', {
@@ -289,7 +300,7 @@ export default function Wizard() {
             });
             const result = await response.json().catch(() => ({}));
             if (!response.ok) {
-                alert(result.message || "Erro ao criar o portal. Verifique sua conexão ou tente outro link.");
+                setSubmitError(result.message || "Não conseguimos salvar o portal. Verifique sua conexão ou tente outro link.");
                 return;
             }
             setData(prev => ({ ...prev, draftToken: result.draftToken, draftSlug: result.slug }));
@@ -298,7 +309,7 @@ export default function Wizard() {
             await generatePix(result.slug, result.draftToken);
         } catch (error) {
             console.error("Error saving portal:", error);
-            alert("Erro ao criar o portal. Verifique sua conexão ou tente outro link.");
+            setSubmitError("Não conseguimos salvar o portal. Verifique sua conexão e tente de novo.");
         } finally {
             setIsSubmitting(false);
         }
@@ -568,11 +579,17 @@ export default function Wizard() {
                             variant="primary"
                             className="w-full gap-2 text-lg"
                             onClick={finalizeCreation}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isGeneratingPix}
                         >
-                            <QrCode className="h-5 w-5" />
-                            Gerar PIX e Finalizar
+                            {isSubmitting || isGeneratingPix
+                                ? <><Loader2 className="h-5 w-5 animate-spin" /> Preparando seu Pix...</>
+                                : <><QrCode className="h-5 w-5" /> Gerar PIX e Finalizar</>}
                         </Button>
+                        <div aria-live="polite">
+                            {(submitError || (pixError && !isPaymentModalOpen)) && (
+                                <p role="alert" className="text-sm text-red-300 text-left">{submitError || pixError}</p>
+                            )}
+                        </div>
                     </div>
                 );
             case 10:
@@ -647,6 +664,9 @@ export default function Wizard() {
                 isOpen={isPaymentModalOpen}
                 onClose={() => setIsPaymentModalOpen(false)}
                 pixData={pixData}
+                onNewPix={() => generatePix(data.slug, data.draftToken)}
+                isGeneratingPix={isGeneratingPix}
+                pixError={pixError}
             />
 
             {currentStep < STEPS.length && (

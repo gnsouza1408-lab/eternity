@@ -95,6 +95,7 @@ export default async function handler(request, response) {
     return response.status(200).json({
         id: result.id,
         amount,
+        expires_at: result.date_of_expiration || null,
         ticket_url: transaction.ticket_url,
         qr_code: transaction.qr_code,
         qr_code_base64: transaction.qr_code_base64,
