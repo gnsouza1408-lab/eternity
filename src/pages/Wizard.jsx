@@ -104,8 +104,8 @@ export default function Wizard() {
                     // TikTok Pixel - Track Purchase
                     if (window.ttq) {
                         try {
+                            // Só tipo, valor e moeda. O link (slug) dá acesso às fotos do casal: nunca vai ao pixel.
                             window.ttq.track('CompletePayment', {
-                                content_id: data.slug,
                                 content_type: 'product',
                                 value: plan.price,
                                 currency: 'BRL'
