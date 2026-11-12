@@ -33,6 +33,8 @@
 
 **Atualização 11/11/2026:** já resolvidos dessa lista: a "IA poética" fake (A5) foi substituída por um assistente de IA real ([`docs/ia/decisoes.md`](ia/decisoes.md)); o lint está zerado; a Política de Privacidade existe em `/privacidade` (os Termos continuam em aberto); e a Fase 0 foi publicada em 09/11/2026, com o SQL 02 aplicado. Os demais itens continuam em aberto.
 
+**Lacuna encontrada no teste de 09/11/2026 (próximo passo, não implementado):** o Pix real do teste foi aprovado, liberou o portal e depois foi estornado de propósito pelo dono, pelo painel do Mercado Pago. O portal continuou liberado. O webhook só trata a aprovação: quando o portal já está `paid`, `applyPayment` ([`api/_lib/payment-sync.js`](../api/_lib/payment-sync.js)) devolve `already_paid` e ignora o aviso, sem nem atualizar o `payment_status`. Próximo passo: tratar `refunded` e `charged_back` (estorno e contestação) para o mesmo `payment_id`, gravando o status e tirando o portal do ar ou marcando-o para revisão, com teste antes de publicar.
+
 ---
 
 > Escopo: leitura completa do código, execução local (desktop e 375px), consulta ao Supabase e ao Mercado Pago (somente leitura, só agregados) e verificação de lint.
@@ -303,3 +305,4 @@ Hoje: Anual R$ 15,90/ano (5 fotos, sem música/emoji/IA) vs Eterno R$ 19,90 úni
 - **Desvio do pedido:** `check_db_status.js`, `unlock_portal.js` e `unlock_portal_manual.js` foram adicionados ao `.gitignore` e **não** entraram no commit, porque contêm a `service_role` key em texto puro e ela ficaria para sempre no histórico. `check_portal.js` (só usa a chave pública) foi commitado. Os 3 arquivos continuam em disco; sugiro migrar para `process.env` e então versioná-los.
 - Verificado após o `git add`: nenhuma ocorrência de `eyJhbGci`, `APP_USR-` ou `sb_secret` nos arquivos staged.
 - **08/11/2026:** os 3 scripts foram reescritos em `scripts/` lendo `process.env` e versionados (a exceção no `.gitignore` saiu). Repositório no GitHub (`gnsouza1408-lab/eternity-app`), Vercel conectada ao Git: merge na `main` publica em produção. A Fase 0 está na branch `fase-0`, um commit por item.
+- **Nota (11/11/2026):** o histórico foi reescrito para remover um e-mail de terceiro e padronizar os autores, e o projeto passou para o repositório `gnsouza1408-lab/eternity`. Os hashes mudaram: o commit inicial `57371f9` agora é `6310f68`. A branch `fase-0` não foi levada para o repositório novo; o conteúdo dela está na `main`.

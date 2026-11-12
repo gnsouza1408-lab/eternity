@@ -1,6 +1,8 @@
 # Fase 0 — ordem de publicação, testes e rollback
 
 Branch `fase-0`. A Vercel publica em produção sozinha quando a `main` recebe merge.
+
+> Nota (11/11/2026): a Fase 0 foi publicada na `main` em 09/11/2026. O repositório agora é `gnsouza1408-lab/eternity`, com o histórico reescrito; a branch `fase-0` não existe nele.
 Regra geral: **cada passo só começa se o anterior passou.** Se algo falhar, pare e vá para "Rollback".
 
 ## Estado do banco antes da publicação
@@ -116,13 +118,13 @@ Se o wizard ficar em "Aguardando pagamento" por mais de 2 minutos: veja o log do
 ### Em produção (passos 2 a 6 acima)
 
 - [x] 2.1 a 2.3 (09/11/2026): Home com os planos novos, portal pago abrindo e "Portal não encontrado".
-- [ ] 2.4 Slug ocupado no wizard: sem registro.
+- [x] 2.4 (09/11/2026): slug ocupado barrado no wizard.
 - [ ] 2.5 Cron `/api/keepalive`: execução não confirmada (o "Run" não foi encontrado no painel e os logs não foram consultados).
 - [x] 3 Simular notificação (09/11/2026): o webhook respondeu 200.
 - [x] 4 Pix real (09/11/2026): Pix de R$ 12,90 aprovado e portal liberado automaticamente. Evidência no Mercado Pago: `payment_id` 187704627261 (`external_reference` e `metadata.slug` = `teste-cc-pix-real`, aprovado em 09/11/2026).
 - [x] 5 SQL 02 e conferência: conferido em 11/11/2026 com a chave pública; select direto em `portals` dá *permission denied* (42501) e as 4 funções públicas respondem.
 - [x] 6.1 Limpeza dos `teste-cc-*` (09/11/2026).
-- [x] 6.2 Estorno: o Mercado Pago registra o pagamento 187704627261 como estornado (`refunded`) em 09/11/2026, minutos depois da aprovação, por iniciativa da conta recebedora.
+- [x] 6.2 Estorno (09/11/2026): intencional, pedido pelo dono no painel do Mercado Pago depois de confirmar que o portal foi liberado. O MP registra o pagamento 187704627261 como `refunded`. O portal continuou liberado: o webhook não trata estorno nem contestação (próximo passo em [`diagnostico.md`](diagnostico.md), "Atualização 11/11/2026").
 - [ ] 6.3 Procurar `assinatura inválida` nos logs do webhook: não verificado.
 - [ ] 6.4 Apagar `WEBHOOK_URL` da Vercel: pendente.
 
