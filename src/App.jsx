@@ -10,18 +10,13 @@ function Layout() {
   return (
     <>
       <Background />
+      {/* O SupportButton fica em cada página: Home e Wizard (menos na tela de sucesso) o exibem; o Portal não. */}
       <Routes>
         <Route path="/" element={<><Home /><SupportButton /></>} />
-        <Route path="/create" element={<Wizard />} /> {/* Wizard handles its own support button logic if needed, or we add it here? The requirement said "except success screen". Wizard manages steps, so we let Wizard include SupportButton conditionally. */}
+        <Route path="/create" element={<Wizard />} />
         <Route path="/portal/:slug" element={<Portal />} />
         <Route path="/privacidade" element={<Privacidade />} />
       </Routes>
-      {/* 
-         We moved SupportButton inside routes or components to control visibility better.
-         Home needs it. 
-         Wizard needs it (except step 10).
-         Portal usually doesn't need it.
-      */}
     </>
   );
 }
