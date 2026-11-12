@@ -53,25 +53,24 @@ export default function Home() {
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-rose-300 mb-6 backdrop-blur-sm mx-auto lg:mx-0">
                         <Sparkles className="h-3 w-3" />
-                        <span>Um presente digital para guardar a história de vocês.</span>
+                        <span>Presente para quem você ama</span>
                     </div>
 
-                    <h1 className="font-serif text-4xl md:text-7xl font-bold mb-6 leading-tight">
-                        Um lugar só para a <br />história de vocês.
+                    <h1 className="font-serif text-3xl sm:text-4xl lg:text-6xl font-bold mb-5 leading-tight">
+                        Um presente digital que você monta em poucos minutos e entrega com um QR Code
                     </h1>
 
-                    <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-xl leading-relaxed mx-auto lg:mx-0">
-                        Fotos, música e o tempo juntos.
-                        <br />
-                        Tudo em um portal personalizado feito para o seu amor.
+                    <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-8 max-w-xl leading-relaxed mx-auto lg:mx-0">
+                        Reúna fotos, uma declaração e a contagem do tempo de vocês em uma página. Pague por Pix e entregue com um QR Code.
                     </p>
 
-                    <Link to="/create">
-                        <Button size="lg" className="text-base rounded-full px-10 h-14 shadow-[0_0_40px_rgba(225,29,72,0.4)] hover:shadow-[0_0_60px_rgba(225,29,72,0.6)] animate-pulse-slow mb-8">
-                            <Heart className="mr-2 h-5 w-5 fill-current" />
-                            Criar nosso portal
+                    <Link to="/create" className="block sm:inline-block">
+                        <Button size="lg" className="w-full sm:w-auto h-auto min-h-[56px] py-3 px-6 sm:px-10 text-base rounded-full whitespace-normal text-center leading-snug shadow-[0_0_40px_rgba(225,29,72,0.4)] hover:shadow-[0_0_60px_rgba(225,29,72,0.6)]">
+                            <Heart className="mr-2 h-5 w-5 fill-current shrink-0" />
+                            Criar o nosso portal — a partir de {formatBRL(PLANS.essential.price)}
                         </Button>
                     </Link>
+                    <p className="text-sm text-gray-500 mt-3 mb-8">Pagamento único por Pix. Sem mensalidade.</p>
                 </motion.div>
 
                 {/* Right Column: Visual Preview */}
