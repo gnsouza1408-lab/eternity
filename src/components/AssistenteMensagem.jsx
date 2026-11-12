@@ -278,6 +278,10 @@ export function AssistenteMensagem({ mensagem, onMensagemChange, rascunhoId }) {
                             />
                         )}
                     </div>
+
+                    <p className="text-xs text-gray-500 text-center">
+                        Usamos IA para sugerir o texto. <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-rose-300">Saiba mais</a>
+                    </p>
                 </section>
             )}
         </div>

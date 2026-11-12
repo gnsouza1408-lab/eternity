@@ -6,6 +6,8 @@ import { PortalPreview } from '../components/PortalPreview';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { PLANS, formatBRL } from '../../shared/plans.js';
+import { Rodape } from '../components/Rodape';
+import { EMAIL_SUPORTE, WHATSAPP_SUPORTE } from '../lib/contato';
 
 const FAQItem = ({ question, children }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -245,12 +247,13 @@ export default function Home() {
                     <h4 className="font-medium text-white">Suporte</h4>
                     <p className="text-sm text-gray-400 mb-2">Dúvidas? Fale com a gente.</p>
                     <div className="flex gap-4">
-                        <a href="https://wa.link/l2qsex" target="_blank" rel="noopener noreferrer" className="text-xs text-rose-400 hover:text-rose-300 underline underline-offset-4">WhatsApp</a>
-                        <a href="mailto:g.nsouza1408@gmail.com" className="text-xs text-rose-400 hover:text-rose-300 underline underline-offset-4">Email</a>
+                        <a href={WHATSAPP_SUPORTE} target="_blank" rel="noopener noreferrer" className="text-xs text-rose-400 hover:text-rose-300 underline underline-offset-4">WhatsApp</a>
+                        <a href={`mailto:${EMAIL_SUPORTE}`} className="text-xs text-rose-400 hover:text-rose-300 underline underline-offset-4">Email</a>
                     </div>
                 </div>
             </Card>
 
+            <Rodape />
         </div>
     );
 }
