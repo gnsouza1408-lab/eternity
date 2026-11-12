@@ -63,7 +63,7 @@ function Escolha({ opcoes, valor, onChange, rotulo }) {
     );
 }
 
-const textareaClasse = 'w-full bg-black/20 border border-white/10 rounded-md p-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-rose-500/50 resize-none';
+const textareaClasse = 'w-full bg-black/20 border border-white/10 rounded-md p-2 text-base md:text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-rose-500/50 resize-none';
 
 /**
  * Assistente do passo da mensagem.

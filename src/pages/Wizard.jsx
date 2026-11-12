@@ -480,7 +480,7 @@ export default function Wizard() {
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-gray-300">Sua Declaração</label>
                         <textarea
-                            className={`w-full h-40 bg-black/20 border rounded-md p-3 text-white focus:outline-none resize-none relative z-10 ${errors.message ? 'border-red-400/70 focus:border-red-400' : 'border-white/10 focus:border-rose-500/50'}`}
+                            className={`w-full h-40 bg-black/20 border rounded-md p-3 text-base text-white focus:outline-none resize-none relative z-10 ${errors.message ? 'border-red-400/70 focus:border-red-400' : 'border-white/10 focus:border-rose-500/50'}`}
                             autoFocus
                             value={data.message}
                             onChange={(e) => handleChange('message', e.target.value)}
