@@ -45,7 +45,7 @@ Detalhes e contas em [limites-e-custo.md](limites-e-custo.md).
 
 ### Privacidade
 - **O que vai para a Anthropic:** só o que a pessoa digita no assistente (nomes, memória, o que admira). Fotos, e-mail e data não vão. Não é preciso preencher sobrenome nem nada que identifique alguém fora do casal.
-- **Retenção:** pela política da API da Anthropic, os dados enviados não são usados para treinar modelos, e a retenção segue os termos comerciais da conta. **Pendente:** citar isso na Política de Privacidade do Eternity, que ainda não existe (já apontado no diagnóstico).
+- **Retenção:** pela política da API da Anthropic, os dados enviados não são usados para treinar modelos, e a retenção segue os termos comerciais da conta. A [Política de Privacidade](https://eternity.dev.br/privacidade) do Eternity, na seção "Assistente de IA", informa o que é enviado à Anthropic e para quê; ela não detalha a retenção do lado da Anthropic.
 - **Logs:** o texto do casal nunca vai para os logs da Vercel; só tamanhos, tokens, tempo, tom e custo.
 - **Limite por IP:** guarda só o HMAC do IP, apagado em 2 dias.
 
@@ -57,7 +57,7 @@ A LGPD (Lei 13.709/2018) pede que o tratamento se limite ao mínimo necessário 
 - **O que não é guardado:** o IP em claro, o texto digitado, os nomes, a memória, a mensagem gerada e qualquer dado do portal.
 - **Por quanto tempo:** a função `consume_ai_quota` apaga registros com mais de 2 dias. A finalidade (conter abuso e custo) se esgota em 24 horas; os 2 dias dão uma folga para o limite diário. A eliminação roda a cada chamada da função, então, sem tráfego, registros antigos ficam guardados até a próxima chamada. Não há contato com ninguém pelo identificador.
 - **Honestidade sobre o hash:** o HMAC é pseudonimização, e para a LGPD dado pseudonimizado continua sendo dado pessoal. Por isso o prazo curto e a ausência do IP em claro importam. Se o banco vazasse, sem a chave o hash não revela o IP, mas a proteção depende de a chave ficar secreta (ela é a `SUPABASE_SERVICE_ROLE_KEY`).
-- **O que ainda falta:** citar esse tratamento na Política de Privacidade, que ainda não existe (já apontado no diagnóstico, §4). Sem ela, a minimização é boa prática, mas não cumpre a obrigação de informar a pessoa.
+- **Como a pessoa é informada:** a [Política de Privacidade](https://eternity.dev.br/privacidade), na seção "Assistente de IA", explica que só um hash do IP e um código aleatório do rascunho são guardados, por até 2 dias, e que o IP em si e o texto digitado não ficam registrados.
 
 ### Prompt injection
 - **Dados separados das instruções.** Tudo o que a pessoa digita vai dentro de `<dados_do_casal>`. O prompt do sistema diz que aquilo é dado, não instrução.
@@ -83,7 +83,6 @@ A LGPD (Lei 13.709/2018) pede que o tratamento se limite ao mínimo necessário 
 | Streaming da resposta (texto aparecendo aos poucos) | A geração leva ~2 s; o ganho de percepção não justifica a complexidade agora. |
 | Edição guiada ("deixe mais curto", "mais engraçado") | O "Gerar outra" cobre o essencial. Pode virar um campo de ajuste depois. |
 | Pré-preencher os nomes a partir do título do portal | O título é livre ("Nós para sempre") e não traz nomes confiáveis. |
-| Perguntar o gênero de quem escreve | Mais um campo no formulário; a linguagem neutra resolveu sem isso. |
 | Avaliação automática com um modelo como juiz (LLM-as-judge) | Com 10 casos, a leitura humana foi suficiente. Com mais volume, vale um juiz para detectar fatos inventados. |
 | Medir se o assistente aumenta a conversão | Depende dos eventos de funil (Fase 1 do diagnóstico, M11). Métrica sugerida: % de portais com mensagem de 100 caracteres ou mais, e conversão de quem usou o assistente comparada com quem não usou. |
 | Moderação do texto final do portal | O assistente não piora a situação atual; fica para quando houver denúncia ou revisão de conteúdo. |
