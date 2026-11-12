@@ -154,7 +154,7 @@ export function PaymentModal({ isOpen, onClose, pixData, onNewPix, isGeneratingP
                             aria-label="Código Pix copia e cola"
                             value={pixData?.qr_code || ''}
                             onFocus={(e) => e.target.select()}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-3 text-xs text-gray-400 font-mono truncate"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-3 text-base md:text-xs text-gray-400 font-mono truncate"
                         />
 
                         <button
