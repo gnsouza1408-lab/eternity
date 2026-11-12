@@ -45,7 +45,7 @@ export function EmojiWaterfall({ selectedEmoji = '❤️' }) {
                 : selectedEmoji,
             delay: Math.random() * 20, // 0-20s delay
             duration: 10 + Math.random() * 20, // 10-30s duration
-            left: Math.random() * 100, // 0-100% width
+            left: Math.random() * 92, // 0-92% da largura (o emoji não pode passar da borda)
         }));
         setParticles(newParticles);
     }, [selectedEmoji]);

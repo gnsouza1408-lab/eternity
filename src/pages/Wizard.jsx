@@ -786,9 +786,9 @@ export default function Wizard() {
             <Card className="w-full min-h-[400px] flex flex-col justify-between">
                 <motion.div
                     key={currentStep}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
                     transition={{ duration: 0.3 }}
                 >
                     {currentStep < 10 && (

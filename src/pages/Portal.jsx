@@ -287,10 +287,10 @@ export default function Portal() {
                 {/* Photo Frame (só aparece quando há fotos; a música continua aparecendo se existir) */}
                 {(temFotos || validVideoId) && (
                 <motion.div
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
+                    initial={{ y: 24, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.8 }}
-                    className="md:order-1"
+                    className="min-w-0 md:order-1"
                 >
                     {temFotos && (
                     <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden glass p-2 rotate-[-2deg] hover:rotate-0 transition-transform duration-500 shadow-2xl">
@@ -395,10 +395,10 @@ export default function Portal() {
                 {/* Message */}
                 {temMensagem && (
                 <motion.div
-                    initial={{ x: 50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
+                    initial={{ y: 24, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 1 }}
-                    className="flex flex-col justify-center md:order-2"
+                    className="min-w-0 flex flex-col justify-center md:order-2"
                 >
                     <Card className="p-10 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
@@ -409,7 +409,7 @@ export default function Portal() {
                             <span className="text-rose-300">Declaração</span>
                             <span className="h-px flex-1 bg-white/20"></span>
                         </h3>
-                        <p className="text-lg leading-loose font-serif text-gray-200 whitespace-pre-wrap">
+                        <p className="text-lg leading-loose font-serif text-gray-200 whitespace-pre-wrap [overflow-wrap:anywhere]">
                             {data.message}
                         </p>
                         <div className="mt-8 text-right">

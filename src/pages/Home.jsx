@@ -106,8 +106,8 @@ export default function Home() {
 
                 {/* Left Column: Text & CTA */}
                 <motion.div
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
+                    initial={{ y: 24, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.8 }}
                     className="text-center lg:text-left"
                 >
@@ -135,8 +135,8 @@ export default function Home() {
 
                 {/* Right Column: Visual Preview */}
                 <motion.div
-                    initial={{ x: 50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
+                    initial={{ y: 24, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="relative"
                 >
@@ -148,7 +148,7 @@ export default function Home() {
                     </div>
 
                     {/* Background decoration for the preview */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-rose-500/10 blur-[100px] -z-10 rounded-full pointer-events-none" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-rose-500/10 blur-[100px] -z-10 rounded-full pointer-events-none" />
                 </motion.div>
 
             </div>
