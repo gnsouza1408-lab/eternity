@@ -165,7 +165,7 @@ function relatorio(execucoes) {
     const linhas = [];
     let totalMs = 0; let n = 0; let falhas = 0; let totalCusto = 0;
     const total = { input: 0, cacheWrite: 0, cacheRead: 0, output: 0 };
-    for (const { caso, pedido, resultado, checks } of execucoes) {
+    for (const { caso, resultado, checks } of execucoes) {
         const ok = checks.every(([, passou]) => passou);
         if (!ok) falhas++;
         linhas.push(`### ${caso.id} — ${ok ? 'passou' : 'FALHOU'}`, '', caso.descricao, '');

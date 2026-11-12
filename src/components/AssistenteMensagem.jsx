@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Wand2, Loader2, RotateCcw, PenLine, Check, AlertCircle, X } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';

@@ -62,6 +62,7 @@ function getClient() {
 // Remove caracteres de controle, junta espaços e neutraliza < > (não fecham tags).
 function limpar(valor) {
     return String(valor)
+        // eslint-disable-next-line no-control-regex -- remover caracteres de controle é o objetivo desta regex
         .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
         .replace(/</g, '‹')
         .replace(/>/g, '›')

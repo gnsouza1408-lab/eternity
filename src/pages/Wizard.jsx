@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Upload, Music, CheckCircle, Check, Copy, Lock, QrCode, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -70,7 +69,6 @@ function CampoErro({ id, children }) {
 const campoInvalido = 'border-red-400/70 focus:border-red-400 focus:ring-red-400/50';
 
 export default function Wizard() {
-    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0);
     const [data, setData] = useState(novoRascunho);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,6 +116,8 @@ export default function Wizard() {
             }, 3000);
         }
         return () => clearInterval(interval);
+    // plan.price só alimenta o evento do pixel; incluí-lo reiniciaria o polling do status do pagamento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isPaymentModalOpen, data.slug]);
 
     // Persistence Logic (Auto-Save & Auto-Recover)
@@ -502,7 +502,7 @@ export default function Wizard() {
                         />
                     </div>
                 );
-            case 5:
+            case 5: {
                 const maxPhotos = plan.maxPhotos;
                 return (
                     <div className="space-y-4">
@@ -539,7 +539,8 @@ export default function Wizard() {
                         )}
                     </div>
                 );
-            case 6:
+            }
+            case 6: {
                 const emojis = ALLOWED_EMOJIS;
                 return (
                     <div className="space-y-6">
@@ -573,6 +574,7 @@ export default function Wizard() {
                         )}
                     </div>
                 );
+            }
             case 7:
                 return (
                     <div className="space-y-4">
@@ -673,7 +675,7 @@ export default function Wizard() {
                         </div>
                     </div>
                 );
-            case 10:
+            case 10: {
                 const portalUrl = `${window.location.origin}/portal/${data.slug}`;
                 return (
                     <div className="text-center space-y-8 py-8">
@@ -751,6 +753,7 @@ export default function Wizard() {
                         </div>
                     </div>
                 );
+            }
             default:
                 return null;
         }

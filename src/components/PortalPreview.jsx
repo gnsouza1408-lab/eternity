@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Play, Pause, Music, Calendar, Clock, Battery, Wifi, Signal } from 'lucide-react';
-import { Card } from './ui/Card';
+import { Heart, Play, Calendar, Battery, Wifi, Signal } from 'lucide-react';
 import { calcularTempo, formatarData } from '../lib/tempoJuntos';
 
 // Data do exemplo: a contagem e o texto "Desde ..." saem sempre desta mesma data.
@@ -19,7 +18,6 @@ const PreviewTimeBlock = ({ value, label, isMobile }) => (
 // Reusable Content Component
 const PortalContent = ({ isMobile = false }) => {
     const [timeLeft, setTimeLeft] = useState(() => calcularTempo(DATA_EXEMPLO) || { days: 0, hours: 0, minutes: 0, seconds: 0 });
-    const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -97,25 +95,23 @@ const PortalContent = ({ isMobile = false }) => {
                         </div>
                     </div>
 
-                    {/* Message for Desktop only or simple version for mobile */}
-                    {(!isMobile || isMobile) && (
-                        <div className={`bg-white/5 border border-white/5 ${isMobile ? 'p-4 rounded-xl' : 'p-6 rounded-2xl'} flex flex-col justify-center`}>
+                    {/* Declaração de exemplo */}
+                    <div className={`bg-white/5 border border-white/5 ${isMobile ? 'p-4 rounded-xl' : 'p-6 rounded-2xl'} flex flex-col justify-center`}>
 
-                            <h3 className="font-serif text-xl font-bold text-rose-100 mb-3 flex items-center gap-2">
-                                <span className="h-px flex-1 bg-white/20"></span>
-                                Declaração
-                                <span className="h-px flex-1 bg-white/20"></span>
-                            </h3>
+                        <h3 className="font-serif text-xl font-bold text-rose-100 mb-3 flex items-center gap-2">
+                            <span className="h-px flex-1 bg-white/20"></span>
+                            Declaração
+                            <span className="h-px flex-1 bg-white/20"></span>
+                        </h3>
 
-                            <p className={`${isMobile ? 'text-sm' : 'text-base'} leading-relaxed font-serif text-gray-300 italic`}>
-                                "Entre o brilho das estrelas e o sussurro do vento, nosso amor floresce como a mais bela poesia..."
-                            </p>
+                        <p className={`${isMobile ? 'text-sm' : 'text-base'} leading-relaxed font-serif text-gray-300 italic`}>
+                            &quot;Entre o brilho das estrelas e o sussurro do vento, nosso amor floresce como a mais bela poesia...&quot;
+                        </p>
 
-                            <div className="mt-4 text-right">
-                                <span className="font-dancing text-rose-400">Com amor, para sempre</span>
-                            </div>
+                        <div className="mt-4 text-right">
+                            <span className="font-dancing text-rose-400">Com amor, para sempre</span>
                         </div>
-                    )}
+                    </div>
 
                 </div>
                 {/* Footer Space */}
