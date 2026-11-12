@@ -2,8 +2,8 @@
 
 ## Atualização 08/11/2026 — Fase 0 (segurança)
 
-> Código na branch `fase-0`, **ainda não publicado**. Ordem de publicação, testes e rollback: [`docs/fase-0-publicacao.md`](fase-0-publicacao.md).
-> Banco: SQL `01` (aditivo) já rodado na produção; SQL `02` (fecha a tabela) só depois do deploy.
+> Código na branch `fase-0`, **publicado em 09/11/2026**. Ordem de publicação, testes e rollback: [`docs/fase-0-publicacao.md`](fase-0-publicacao.md).
+> Banco: SQL `01` (aditivo) e SQL `02` (fecha a tabela) aplicados na produção. Conferido em 11/11/2026 com a chave pública: select direto em `portals` dá *permission denied* e as funções públicas respondem.
 > O texto original abaixo é o retrato de 14/10 e não foi reescrito.
 
 **Decisões:** dois planos vitalícios, pagamento único: **Essencial R$ 12,90** (5 fotos, sem música, emoji padrão) e **Completo R$ 19,90** (15 fotos, música, emojis). Preço e limites só no servidor (`shared/plans.js`). O plano Anual saiu da venda; portais `annual`/`eternal` existentes continuam abrindo. Domínio oficial: `eternity.dev.br`. Testes feitos localmente contra a produção com slugs `teste-cc-*` (apagados), sem projeto de teste.
@@ -14,7 +14,7 @@
 | Anon insere qualquer coisa, inclusive `status: 'paid'` (§4) | **Resolvido após o SQL 02.** Criação só por `/api/create-portal` (chave secreta), status forçado `pending`, CHECK no banco. |
 | Preço vindo do navegador (§3.3) | **Resolvido.** `create-pix` calcula pelo plano gravado; webhook confere valor e moeda. |
 | `create-pix` aceita qualquer slug (§3.3) | **Resolvido.** Exige portal existente, `pending` e token de rascunho. |
-| Webhook sem assinatura (§3.3) | **Resolvido.** Valida `x-signature`; webhook configurado no painel do MP. *A confirmar no passo 3 da publicação.* |
+| Webhook sem assinatura (§3.3) | **Resolvido.** Valida `x-signature`; webhook configurado no painel do MP. Confirmado em 09/11/2026: "Simular notificação" respondeu 200 e o Pix real foi liberado automaticamente. |
 | Webhook falha em silêncio, responde 200 (A7) | **Resolvido.** Sem fallback para chave pública; erro de banco → 500, erro do MP → 502 (o MP reenvia). |
 | Sem `payment_id` no banco (§3.3) | **Resolvido.** `payment_id`, `payment_status`, `paid_amount`, `paid_at`. |
 | `service_role` hardcoded nos scripts (§4) | **Resolvido.** Chaves legadas desativadas em 14/10; scripts em `scripts/` leem `.env`. |

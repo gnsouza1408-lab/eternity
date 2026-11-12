@@ -1,6 +1,6 @@
 # Assistente de mensagem: decisões
 
-> Branch `ia-assistente`. Documentos relacionados: [testes do prompt](testes-prompt.md) · [limites e custo](limites-e-custo.md) · prompt em [`api/prompts/declaracao.md`](../../api/prompts/declaracao.md).
+> Documentos relacionados: [testes do prompt](testes-prompt.md) · [limites e custo](limites-e-custo.md) · prompt em [`api/prompts/declaracao.md`](../../api/prompts/declaracao.md).
 
 ## 1. O problema
 

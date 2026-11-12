@@ -8,7 +8,7 @@ Regra geral: **cada passo só começa se o anterior passou.** Se algo falhar, pa
 | SQL | Estado | O que faz |
 |---|---|---|
 | `01-colunas-e-funcoes-publicas.sql` | **Já rodado** (08/11) | Colunas novas + 4 funções públicas. Compatível com o site antigo. |
-| `02-remover-acesso-anon.sql` | **Não rodar ainda** | Fecha a tabela para visitantes. Só no passo 5. |
+| `02-remover-acesso-anon.sql` | **Rodado** (passo 5; conferido em 11/11/2026) | Fecha a tabela para visitantes. |
 | `rollback-policies-originais.sql` | Reserva | Desfaz o 02. |
 | `01-rollback.sql` | Reserva | Desfaz o 01 (só depois de voltar o deploy). |
 
@@ -113,13 +113,17 @@ Se o wizard ficar em "Aguardando pagamento" por mais de 2 minutos: veja o log do
 - [x] Cron: sem token ou com token errado → 401; POST → 405; token certo → 200 com consulta ao banco.
 - [x] `vite build` sem erros em cada item.
 
-### A fazer em produção (passos 2 a 5 acima)
+### Em produção (passos 2 a 6 acima)
 
-- [ ] 2.1 a 2.5 · [ ] 3 Simular notificação · [ ] 4 Pix real · [ ] 5 SQL 02 e conferência · [ ] 6 Limpeza
+- [ ] 2.1 a 2.5
+- [x] 3 Simular notificação (09/11/2026): o webhook respondeu 200.
+- [x] 4 Pix real (09/11/2026): Pix de R$ 12,90 aprovado e portal liberado automaticamente.
+- [x] 5 SQL 02 e conferência: conferido em 11/11/2026 com a chave pública; select direto em `portals` dá *permission denied* (42501) e as 4 funções públicas respondem.
+- [ ] 6 Limpeza
 
 ### Não testado / limites
 
-- Aviso real do Mercado Pago no webhook novo (só no passo 3 e 4).
+- Aviso real do Mercado Pago no webhook novo: coberto pelos passos 3 e 4 em 09/11/2026.
 - Cron agendado de verdade (a Vercel só agenda em produção; o passo 2.5 roda manualmente).
-- SQL 02 (você roda; não há banco de teste).
+- SQL 02: não há banco de teste; aplicado direto na produção e conferido em 11/11/2026.
 - Celular real (testei no navegador do desktop).
