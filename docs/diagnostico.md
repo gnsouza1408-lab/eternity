@@ -2,7 +2,7 @@
 
 ## Atualização 08/11/2026 — Fase 0 (segurança)
 
-> Código na branch `fase-0`, **publicado em 09/11/2026**. Ordem de publicação, testes e rollback: [`docs/fase-0-publicacao.md`](fase-0-publicacao.md).
+> Código **publicado na `main` em 09/11/2026**. Ordem de publicação, testes e rollback: [`docs/fase-0-publicacao.md`](fase-0-publicacao.md).
 > Banco: SQL `01` (aditivo) e SQL `02` (fecha a tabela) aplicados na produção. Conferido em 11/11/2026 com a chave pública: select direto em `portals` dá *permission denied* e as funções públicas respondem.
 > O texto original abaixo é o retrato de 14/10 e não foi reescrito.
 
@@ -30,6 +30,8 @@
 | Fotos e payload sem limite de tamanho (§4, M3) | **Mitigado.** Só JPEG base64, até 260 mil caracteres por foto, corpo até 4 MB. Storage fica para a Fase 2. |
 
 **Continua em aberto:** e-mail transacional (A6), "IA poética" fake (A5), campos obrigatórios no wizard (A2), HEIC/erros de upload (M2), modal de Pix no celular (M6), eventos de funil (M11), SEO/OG (M12), Termos e Privacidade (§4), lint (73 erros antigos), pendentes antigos sem expiração.
+
+**Atualização 11/11/2026:** já resolvidos dessa lista: a "IA poética" fake (A5) foi substituída por um assistente de IA real ([`docs/ia/decisoes.md`](ia/decisoes.md)); o lint está zerado; a Política de Privacidade existe em `/privacidade` (os Termos continuam em aberto); e a Fase 0 foi publicada em 09/11/2026, com o SQL 02 aplicado. Os demais itens continuam em aberto.
 
 ---
 

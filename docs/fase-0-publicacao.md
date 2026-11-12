@@ -115,11 +115,16 @@ Se o wizard ficar em "Aguardando pagamento" por mais de 2 minutos: veja o log do
 
 ### Em produção (passos 2 a 6 acima)
 
-- [ ] 2.1 a 2.5
+- [x] 2.1 a 2.3 (09/11/2026): Home com os planos novos, portal pago abrindo e "Portal não encontrado".
+- [ ] 2.4 Slug ocupado no wizard: sem registro.
+- [ ] 2.5 Cron `/api/keepalive`: execução não confirmada (o "Run" não foi encontrado no painel e os logs não foram consultados).
 - [x] 3 Simular notificação (09/11/2026): o webhook respondeu 200.
-- [x] 4 Pix real (09/11/2026): Pix de R$ 12,90 aprovado e portal liberado automaticamente.
+- [x] 4 Pix real (09/11/2026): Pix de R$ 12,90 aprovado e portal liberado automaticamente. Evidência no Mercado Pago: `payment_id` 187704627261 (`external_reference` e `metadata.slug` = `teste-cc-pix-real`, aprovado em 09/11/2026).
 - [x] 5 SQL 02 e conferência: conferido em 11/11/2026 com a chave pública; select direto em `portals` dá *permission denied* (42501) e as 4 funções públicas respondem.
-- [ ] 6 Limpeza
+- [x] 6.1 Limpeza dos `teste-cc-*` (09/11/2026).
+- [x] 6.2 Estorno: o Mercado Pago registra o pagamento 187704627261 como estornado (`refunded`) em 09/11/2026, minutos depois da aprovação, por iniciativa da conta recebedora.
+- [ ] 6.3 Procurar `assinatura inválida` nos logs do webhook: não verificado.
+- [ ] 6.4 Apagar `WEBHOOK_URL` da Vercel: pendente.
 
 ### Não testado / limites
 
