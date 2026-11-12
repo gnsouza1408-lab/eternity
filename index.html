@@ -1,13 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Eternity - Memórias Eternas</title>
+    <meta name="theme-color" content="#0a0608" />
+    <title>Eternity | Um presente digital com QR Code para quem você ama</title>
+    <meta name="description" content="Monte em poucos minutos uma página com fotos, uma declaração e a contagem do tempo de vocês juntos. Pague por Pix e entregue com um QR Code." />
+
+    <!-- Open Graph (prévia do link no WhatsApp, Instagram e redes sociais) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Eternity" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:url" content="https://eternity.dev.br/" />
+    <meta property="og:title" content="Eternity | Um presente digital para quem você ama" />
+    <meta property="og:description" content="Monte em minutos uma página com fotos, uma declaração e a contagem do tempo juntos. Pague por Pix e entregue com um QR Code." />
+    <meta property="og:image" content="https://eternity.dev.br/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Coração rosa e o texto: Eternity, um presente digital para quem você ama." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Eternity | Um presente digital para quem você ama" />
+    <meta name="twitter:description" content="Monte em minutos uma página com fotos, uma declaração e a contagem do tempo juntos. Pague por Pix e entregue com um QR Code." />
+    <meta name="twitter:image" content="https://eternity.dev.br/og-image.png" />
+    <!-- Privacidade: nas páginas de portal (/portal/...) os pixels NÃO são carregados.
+         O link do portal dá acesso às fotos do casal, e os pixels enviam a URL da página. -->
+    <script>
+      window.__semPixel = /^\/portal(\/|$)/.test(location.pathname);
+    </script>
     <!-- TikTok Pixel Code Start -->
     <script>
     !function (w, d, t) {
+      if (w.__semPixel) return;
       w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
     var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
     ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
@@ -19,24 +45,23 @@
     <!-- Meta Pixel Code -->
     <script>
     !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    {if(f.fbq||f.__semPixel)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
     if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
     n.queue=[];t=b.createElement(e);t.async=!0;
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1479940113707351');
-    fbq('track', 'PageView');
+    if (window.fbq) {
+      // Sem PageView automático a cada troca de rota do app: uma rota pode ser /portal/...
+      fbq.disablePushState = true;
+      fbq('init', '1479940113707351');
+      fbq('track', 'PageView');
+    }
     </script>
     <!-- End Meta Pixel Code -->
   </head>
   <body>
-    <!-- Meta Pixel Code (noscript) -->
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1479940113707351&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- End Meta Pixel Code (noscript) -->
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

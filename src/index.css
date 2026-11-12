@@ -5,6 +5,11 @@
 @tailwind utilities;
 
 @layer base {
+  /* Proteção extra: nada pode criar rolagem lateral nem fazer o celular dar zoom out. As causas foram corrigidas na origem. */
+  html {
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-dark text-white font-sans antialiased overflow-x-hidden;
   }

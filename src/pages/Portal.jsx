@@ -6,10 +6,11 @@ import { EmojiWaterfall } from '../components/EmojiWaterfall';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { supabase } from '../lib/supabaseClient';
+import { calcularTempo, formatarData, parseDataLocal } from '../lib/tempoJuntos';
 
 const TimeBlock = ({ value, label }) => (
-    <div className="flex flex-col items-center mx-2 md:mx-4">
-        <span className="text-3xl md:text-5xl font-serif font-bold text-white mb-1 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+    <div className="flex flex-col items-center sm:mx-2 md:mx-4">
+        <span className="text-4xl md:text-5xl font-serif font-bold text-white mb-1 tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
             {String(value).padStart(2, '0')}
         </span>
         <span className="text-xs md:text-sm text-rose-200/80 uppercase tracking-widest">{label}</span>
@@ -64,35 +65,12 @@ export default function Portal() {
         loadPortal();
     }, [slug]);
 
+    // Contagem desde a data do portal. Data vazia, inválida ou no futuro: sem contagem.
     useEffect(() => {
-        if (!data?.date) return;
-
-        const interval = setInterval(() => {
-            // Append T00:00:00 to ensure we count from the start of that day in local time
-            // If the input is YYYY-MM-DD, new Date() treats it as UTC, which might be day before in negative timezones.
-            // Using replace(/-/g, '/') sometimes helps cross-browser or appending time.
-            // Safest: Create date object parts
-            const dateParts = data.date.split('-');
-            let start;
-            if (dateParts.length === 3) {
-                start = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]).getTime();
-            } else {
-                start = new Date(data.date).getTime();
-            }
-
-            const now = new Date().getTime();
-            const difference = now - start;
-
-            if (difference > 0) {
-                setTimeLeft({
-                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-                    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-                    minutes: Math.floor((difference / 1000 / 60) % 60),
-                    seconds: Math.floor((difference / 1000) % 60),
-                });
-            }
-        }, 1000);
-
+        if (!data?.date) return undefined;
+        const atualizar = () => setTimeLeft(calcularTempo(data.date) || { days: 0, hours: 0, minutes: 0, seconds: 0 });
+        atualizar();
+        const interval = setInterval(atualizar, 1000);
         return () => clearInterval(interval);
     }, [data]);
 
@@ -223,6 +201,13 @@ export default function Portal() {
 
 
 
+    // Estado da data e do conteúdo: o portal não mostra blocos vazios nem datas inválidas.
+    const dataValida = Boolean(parseDataLocal(data.date));
+    const dataOk = dataValida && calcularTempo(data.date) !== null;
+    const dataFutura = dataValida && !dataOk;
+    const temFotos = Array.isArray(data.photos) && data.photos.length > 0;
+    const temMensagem = Boolean(data.message && data.message.trim());
+
     if (!isStarted) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl">
@@ -257,44 +242,57 @@ export default function Portal() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 1 }}
                 >
-                    <h1 className="font-serif text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white via-rose-100 to-white pb-2">
-                        {data.title}
+                    <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white via-rose-100 to-white pb-2 break-words">
+                        {data.title?.trim() || 'Nós para sempre'}
                     </h1>
-                    <div className="inline-flex items-center gap-2 text-rose-300/80 bg-white/5 px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
-                        <Calendar className="h-4 w-4" />
-                        <span>Desde {new Date(data.date + 'T00:00:00').toLocaleDateString()}</span>
-                    </div>
+                    {dataOk && (
+                        <div className="inline-flex items-center gap-2 text-rose-300/80 bg-white/5 px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
+                            <Calendar className="h-4 w-4" />
+                            <span>Desde {formatarData(data.date)}</span>
+                        </div>
+                    )}
+                    {dataFutura && (
+                        <div className="inline-flex items-center gap-2 text-rose-300/80 bg-white/5 px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
+                            <Calendar className="h-4 w-4" />
+                            <span>Começa em {formatarData(data.date)}</span>
+                        </div>
+                    )}
                 </motion.div>
             </header>
 
-            {/* Counter */}
-            <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-                className="mb-20 glass-card p-8 md:p-12 rounded-3xl border-rose-500/20 shadow-[0_0_100px_rgba(225,29,72,0.1)]"
-            >
-                <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-                    <TimeBlock value={timeLeft.days} label="Dias" />
-                    <div className="text-4xl font-serif text-rose-500/50 mt-2">:</div>
-                    <TimeBlock value={timeLeft.hours} label="Horas" />
-                    <div className="text-4xl font-serif text-rose-500/50 mt-2">:</div>
-                    <TimeBlock value={timeLeft.minutes} label="Min" />
-                    <div className="text-4xl font-serif text-rose-500/50 mt-2">:</div>
-                    <TimeBlock value={timeLeft.seconds} label="Seg" />
-                </div>
-                <p className="text-center mt-8 text-lg font-serif italic text-gray-300">"Juntos construindo nossa eternidade"</p>
-            </motion.div>
+            {/* Counter (só com data válida e já iniciada) */}
+            {dataOk && (
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.8 }}
+                    className="mb-16 sm:mb-20 w-full max-w-3xl glass-card p-6 sm:p-8 md:p-12 rounded-3xl border-rose-500/20 shadow-[0_0_100px_rgba(225,29,72,0.1)]"
+                >
+                    {/* Celular: grade 2x2, sem separadores. A partir de sm: uma linha com ':' entre os blocos. */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-6 justify-items-center sm:flex sm:flex-wrap sm:justify-center sm:gap-4 md:gap-8">
+                        <TimeBlock value={timeLeft.days} label="Dias" />
+                        <div className="hidden sm:block text-4xl font-serif text-rose-500/50 mt-2">:</div>
+                        <TimeBlock value={timeLeft.hours} label="Horas" />
+                        <div className="hidden sm:block text-4xl font-serif text-rose-500/50 mt-2">:</div>
+                        <TimeBlock value={timeLeft.minutes} label="Min" />
+                        <div className="hidden sm:block text-4xl font-serif text-rose-500/50 mt-2">:</div>
+                        <TimeBlock value={timeLeft.seconds} label="Seg" />
+                    </div>
+                    <p className="text-center mt-8 text-lg font-serif italic text-gray-300">"Juntos construindo nossa eternidade"</p>
+                </motion.div>
+            )}
 
             {/* Photos & Message */}
-            <div className="grid md:grid-cols-2 gap-8 w-full max-w-5xl mx-auto mb-20">
-                {/* Photo Frame */}
+            <div className={`grid gap-8 w-full mx-auto mb-20 ${temFotos ? 'md:grid-cols-2 max-w-5xl' : 'max-w-2xl'}`}>
+                {/* Photo Frame (só aparece quando há fotos; a música continua aparecendo se existir) */}
+                {(temFotos || validVideoId) && (
                 <motion.div
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
+                    initial={{ y: 24, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.8 }}
-                    className="md:order-1"
+                    className="min-w-0 md:order-1"
                 >
+                    {temFotos && (
                     <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden glass p-2 rotate-[-2deg] hover:rotate-0 transition-transform duration-500 shadow-2xl">
                         <AnimatePresence mode="wait">
                             {data.photos.length > 0 ? (
@@ -323,15 +321,12 @@ export default function Portal() {
                                         alt="Momentos"
                                     />
                                 </motion.div>
-                            ) : (
-                                <div className="w-full h-full bg-white/5 flex items-center justify-center rounded-xl">
-                                    <span className="text-gray-500">Sem fotos</span>
-                                </div>
-                            )}
+                            ) : null}
                         </AnimatePresence>
 
 
                     </div>
+                    )}
 
                     {/* Integrated Music Player below photos */}
                     {validVideoId && (
@@ -395,13 +390,15 @@ export default function Portal() {
                         </div>
                     )}
                 </motion.div>
+                )}
 
                 {/* Message */}
+                {temMensagem && (
                 <motion.div
-                    initial={{ x: 50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
+                    initial={{ y: 24, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 1 }}
-                    className="flex flex-col justify-center md:order-2"
+                    className="min-w-0 flex flex-col justify-center md:order-2"
                 >
                     <Card className="p-10 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
@@ -412,7 +409,7 @@ export default function Portal() {
                             <span className="text-rose-300">Declaração</span>
                             <span className="h-px flex-1 bg-white/20"></span>
                         </h3>
-                        <p className="text-lg leading-loose font-serif text-gray-200 whitespace-pre-wrap">
+                        <p className="text-lg leading-loose font-serif text-gray-200 whitespace-pre-wrap [overflow-wrap:anywhere]">
                             {data.message}
                         </p>
                         <div className="mt-8 text-right">
@@ -420,6 +417,7 @@ export default function Portal() {
                         </div>
                     </Card>
                 </motion.div>
+                )}
             </div>
 
             <div id="youtube-player" className="hidden"></div>
