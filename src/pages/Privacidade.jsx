@@ -86,7 +86,7 @@ export default function Privacidade() {
                     </Secao>
 
                     <Secao titulo="Seus direitos">
-                        <p>Você pode pedir para saber quais dados temos sobre você, corrigir, ou <strong className="text-white">apagar o seu portal e os dados ligados a ele</strong>. É só escrever para <a className="text-rose-400 underline underline-offset-4" href={`mailto:${EMAIL_SUPORTE}`}>{EMAIL_SUPORTE}</a>, de preferência do mesmo e-mail que você usou, informando o link do portal. Esses pedidos são atendidos por pessoas, uma a uma, e podem levar alguns dias.</p>
+                        <p>Você pode pedir para saber quais dados temos sobre você, corrigir, ou <strong className="text-white">apagar o seu portal e os dados ligados a ele</strong>. É só escrever para <a className="text-rose-400 underline underline-offset-4" href={`mailto:${EMAIL_SUPORTE}`}>{EMAIL_SUPORTE}</a>, de preferência do mesmo e-mail que você usou, informando o link do portal. Esses pedidos são atendidos em até 15 dias.</p>
                     </Secao>
 
                     <Secao titulo="Mudanças nesta política">
