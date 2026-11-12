@@ -72,7 +72,7 @@ export default function Privacidade() {
                             <li><strong className="text-white">Supabase</strong>: banco de dados onde ficam o portal e as fotos.</li>
                             <li><strong className="text-white">Vercel</strong>: hospedagem do site.</li>
                             <li><strong className="text-white">Anthropic</strong>: somente o texto do assistente de IA, como descrito acima.</li>
-                            <li><strong className="text-white">TikTok e Meta (Facebook/Instagram)</strong>: usamos os pixels deles para medir visitas e compras vindas de anúncios. Eles recebem dados de navegação, e o TikTok recebe também o evento de compra, só com o valor e a moeda: o link e o conteúdo do portal não são enviados. O uso desses dados segue as políticas dessas empresas.</li>
+                            <li><strong className="text-white">TikTok e Meta (Facebook/Instagram)</strong>: usamos os pixels deles para medir visitas e compras vindas de anúncios. Eles recebem dados de navegação, e o TikTok recebe também o evento de compra, só com o valor e a moeda: o link e o conteúdo do portal não são enviados. Nas páginas dos portais (endereços com /portal/) esses pixels nem são carregados, então o link de um portal não chega a essas empresas. O uso dos dados que elas recebem segue as políticas delas.</li>
                         </ul>
                         <p>Não vendemos seus dados.</p>
                     </Secao>
