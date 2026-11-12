@@ -170,6 +170,29 @@ export default function Home() {
                 </ol>
             </section>
 
+            {/* Assistente de escrita (IA) */}
+            <section className="w-full max-w-3xl mx-auto mb-24" aria-labelledby="assistente">
+                <Card className="border-rose-500/30 bg-gradient-to-br from-rose-500/10 via-transparent to-transparent">
+                    <div className="flex flex-col sm:flex-row gap-5 sm:items-center">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-500/15 border border-rose-500/30">
+                            <Sparkles className="h-5 w-5 text-rose-300" />
+                        </div>
+                        <div>
+                            <h2 id="assistente" className="font-serif text-2xl font-bold mb-2">Travou na hora de escrever?</h2>
+                            <p className="text-gray-300 leading-relaxed">
+                                Conte como vocês se conheceram e uma lembrança, e a IA sugere uma declaração com a história de vocês. Você revisa e edita antes de usar.
+                            </p>
+                            <p className="text-sm text-gray-400 mt-3">
+                                Está incluído nos dois planos. A IA só usa o que você contar e pode errar, por isso o texto é sempre uma sugestão: nada entra no portal sem a sua escolha.
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">
+                                O que você digitar no assistente é enviado a um serviço de IA só para gerar a sugestão. <Link to="/privacidade" className="underline underline-offset-4 hover:text-rose-300">Saiba mais</Link>
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            </section>
+
             {/* Planos */}
             <section className="w-full max-w-3xl mx-auto mb-24" aria-labelledby="planos">
                 <h2 id="planos" className="font-serif text-3xl md:text-4xl font-bold mb-2 text-center">Escolha seu plano</h2>
