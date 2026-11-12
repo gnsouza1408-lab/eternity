@@ -123,6 +123,7 @@ export default function Wizard() {
     // Persistence Logic (Auto-Save & Auto-Recover)
     useEffect(() => {
         // Load state on mount
+        let temPixSalvo = false;
         const savedState = localStorage.getItem('eternity_wizard_state');
         if (savedState) {
             try {
@@ -130,12 +131,26 @@ export default function Wizard() {
                 setData(restoreData(parsed.data));
                 setCurrentStep(parsed.currentStep);
                 if (parsed.pixData) {
+                    temPixSalvo = true;
                     setPixData(parsed.pixData);
                     setIsPaymentModalOpen(parsed.isPaymentModalOpen);
                 }
             } catch (e) {
                 console.error("Failed to load saved state", e);
             }
+        }
+
+        // Plano escolhido na landing (/create?plano=essential|complete). Não muda o plano de um
+        // pagamento já em andamento.
+        const planoDaUrl = new URLSearchParams(window.location.search).get('plano');
+        if (PLANS[planoDaUrl] && !temPixSalvo) {
+            setData(prev => {
+                if (prev.plan === planoDaUrl) return prev;
+                if (planoDaUrl === 'essential') {
+                    return { ...prev, plan: planoDaUrl, photos: prev.photos.slice(0, PLANS.essential.maxPhotos), music: '', musicName: '', emoji: DEFAULT_EMOJI };
+                }
+                return { ...prev, plan: planoDaUrl };
+            });
         }
     }, []);
 
