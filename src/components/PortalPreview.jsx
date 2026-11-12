@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Play, Pause, Music, Calendar, Clock, Battery, Wifi, Signal } from 'lucide-react';
-import { Card } from './ui/Card';
+import { Heart, Play, Calendar, Battery, Wifi, Signal } from 'lucide-react';
 import { calcularTempo, formatarData } from '../lib/tempoJuntos';
 
 // Data do exemplo: a contagem e o texto "Desde ..." saem sempre desta mesma data.
@@ -19,7 +18,6 @@ const PreviewTimeBlock = ({ value, label, isMobile }) => (
 // Reusable Content Component
 const PortalContent = ({ isMobile = false }) => {
     const [timeLeft, setTimeLeft] = useState(() => calcularTempo(DATA_EXEMPLO) || { days: 0, hours: 0, minutes: 0, seconds: 0 });
-    const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -108,7 +106,7 @@ const PortalContent = ({ isMobile = false }) => {
                             </h3>
 
                             <p className={`${isMobile ? 'text-sm' : 'text-base'} leading-relaxed font-serif text-gray-300 italic`}>
-                                "Entre o brilho das estrelas e o sussurro do vento, nosso amor floresce como a mais bela poesia..."
+                                &quot;Entre o brilho das estrelas e o sussurro do vento, nosso amor floresce como a mais bela poesia...&quot;
                             </p>
 
                             <div className="mt-4 text-right">

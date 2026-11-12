@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Copy, Check, Loader2, QrCode, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from './ui/Button';
 import { formatBRL } from '../../shared/plans.js';

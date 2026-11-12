@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Heart, Calendar, Clock, Music as MusicIcon } from 'lucide-react';
+import { Play, Pause, Heart, Calendar, Clock } from 'lucide-react';
 import { EmojiWaterfall } from '../components/EmojiWaterfall';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -278,7 +278,7 @@ export default function Portal() {
                         <div className="hidden sm:block text-4xl font-serif text-rose-500/50 mt-2">:</div>
                         <TimeBlock value={timeLeft.seconds} label="Seg" />
                     </div>
-                    <p className="text-center mt-8 text-lg font-serif italic text-gray-300">"Juntos construindo nossa eternidade"</p>
+                    <p className="text-center mt-8 text-lg font-serif italic text-gray-300">&quot;Juntos construindo nossa eternidade&quot;</p>
                 </motion.div>
             )}
 

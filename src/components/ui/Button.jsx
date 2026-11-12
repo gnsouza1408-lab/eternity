@@ -1,9 +1,8 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
-import { MotionConfig, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-const Button = React.forwardRef(({ className, variant = 'primary', size = 'default', asChild = false, ...props }, ref) => {
-    const Comp = asChild ? 'span' : 'button';
+const Button = React.forwardRef(({ className, variant = 'primary', size = 'default', ...props }, ref) => {
 
     const variants = {
         primary: "bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.3)] hover:shadow-[0_0_30px_rgba(225,29,72,0.5)] border border-rose-500/50",

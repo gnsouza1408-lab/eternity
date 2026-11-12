@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Sparkles, Check, Minus, ChevronDown, ChevronUp, MessageCircle, PenLine, QrCode, Smartphone } from 'lucide-react';

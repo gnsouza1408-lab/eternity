@@ -1,5 +1,4 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Wizard from './pages/Wizard';
 import Portal from './pages/Portal';
@@ -8,9 +7,6 @@ import { Background } from './components/Background';
 import { SupportButton } from './components/SupportButton';
 
 function Layout() {
-  const location = useLocation();
-  const isPortal = location.pathname.startsWith('/portal/');
-
   return (
     <>
       <Background />
