@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Play, Pause, Music, Calendar, Clock, Battery, Wifi, Signal } from 'lucide-react';
 import { Card } from './ui/Card';
+import { calcularTempo, formatarData } from '../lib/tempoJuntos';
+
+// Data do exemplo: a contagem e o texto "Desde ..." saem sempre desta mesma data.
+const DATA_EXEMPLO = '2025-06-12';
 
 const PreviewTimeBlock = ({ value, label, isMobile }) => (
     <div className={`flex flex-col items-center ${isMobile ? 'mx-1' : 'mx-2 md:mx-4'}`}>
@@ -14,21 +18,18 @@ const PreviewTimeBlock = ({ value, label, isMobile }) => (
 
 // Reusable Content Component
 const PortalContent = ({ isMobile = false }) => {
-    const [timeLeft, setTimeLeft] = useState({ days: 246, hours: 19, minutes: 57, seconds: 22 });
+    const [timeLeft, setTimeLeft] = useState(() => calcularTempo(DATA_EXEMPLO) || { days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev.seconds < 59) return { ...prev, seconds: prev.seconds + 1 };
-                return { ...prev, seconds: 0, minutes: prev.minutes + 1 };
-            });
+            setTimeLeft(calcularTempo(DATA_EXEMPLO) || { days: 0, hours: 0, minutes: 0, seconds: 0 });
         }, 1000);
         return () => clearInterval(interval);
     }, []);
 
     return (
-        <div className={`w-full h-full overflow-hidden flex flex-col ${isMobile ? 'p-4' : 'p-6 md:p-8'} relative`}>
+        <div className={`w-full h-full overflow-hidden flex flex-col ${isMobile ? 'p-4 pt-14' : 'p-6 md:p-8'} relative`}>
             {/* Background Gradient */}
             <div className="absolute inset-0 bg-gradient-to-b from-rose-950/20 via-black to-black -z-10" />
 
@@ -40,7 +41,7 @@ const PortalContent = ({ isMobile = false }) => {
                 </h1>
                 <div className={`inline-flex items-center gap-2 text-rose-300/80 bg-white/5 ${isMobile ? 'px-2 py-1 text-[10px]' : 'px-3 py-1.5 text-xs'} rounded-full backdrop-blur-sm border border-white/5`}>
                     <Calendar className={`${isMobile ? 'h-3 w-3' : 'h-3.5 w-3.5'}`} />
-                    <span>Desde 12/06/2025</span>
+                    <span>Desde {formatarData(DATA_EXEMPLO)}</span>
                 </div>
             </div>
 
