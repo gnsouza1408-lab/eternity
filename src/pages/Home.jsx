@@ -117,20 +117,20 @@ export default function Home() {
                     </div>
 
                     <h1 className="font-serif text-3xl sm:text-4xl lg:text-6xl font-bold mb-5 leading-tight">
-                        Um presente digital que você monta em poucos minutos e entrega com um QR Code
+                        Presente de última hora que não parece de última hora.
                     </h1>
 
                     <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-8 max-w-xl leading-relaxed mx-auto lg:mx-0">
-                        Reúna fotos, uma declaração e a contagem do tempo de vocês em uma página. Pague por Pix e entregue com um QR Code.
+                        Em 5 minutos você monta uma página com as fotos e a história de vocês, e entrega com um QR Code.
                     </p>
 
                     <Link to="/create" className="block sm:inline-block">
                         <Button size="lg" className="w-full sm:w-auto h-auto min-h-[56px] py-3 px-6 sm:px-10 text-base rounded-full whitespace-normal text-center leading-snug shadow-[0_0_40px_rgba(225,29,72,0.4)] hover:shadow-[0_0_60px_rgba(225,29,72,0.6)]">
                             <Heart className="mr-2 h-5 w-5 fill-current shrink-0" />
-                            Criar o nosso portal — a partir de {formatBRL(PLANS.essential.price)}
+                            Criar nosso presente
                         </Button>
                     </Link>
-                    <p className="text-sm text-gray-500 mt-3 mb-8">Pagamento único por Pix. Sem mensalidade.</p>
+                    <p className="text-sm text-gray-400 mt-3 mb-8">A partir de {formatBRL(PLANS.essential.price)} · pagamento único por Pix</p>
                 </motion.div>
 
                 {/* Right Column: Visual Preview */}
