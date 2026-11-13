@@ -2,7 +2,7 @@
 
 **Um presente digital que a pessoa monta em minutos e entrega com um QR Code:** uma página com as fotos do casal, a contagem do tempo juntos, música e uma declaração, escrita com a ajuda de um assistente de IA.
 
-🔗 **No ar:** [eternity.dev.br](https://eternity.dev.br) · 🎥 **Vídeo (2 min):** [LINK DO VÍDEO]
+🔗 **No ar:** [eternity.dev.br](https://eternity.dev.br) · 🎥 **Vídeo (2 min):** [assistir no YouTube](https://youtu.be/Ibo9pED8x9Q)
 
 > Produto real, em produção, com pagamento por Pix e clientes pagantes. Este repositório conta como ele foi diagnosticado, protegido e ganhou um assistente de IA.
 
